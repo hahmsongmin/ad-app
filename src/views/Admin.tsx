@@ -1,20 +1,20 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
-import { AdminColumns, DataListBox, GRID_DEFAULT_LOCALE_TEXT } from "../config";
-import { useCallback, useEffect, useRef, useState } from "react";
-import CustomPagination from "../components/CustomPagination";
-import QuickSearchToolbar from "../components/QuickSearchToolbar";
-import TextField from "@mui/material/TextField";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import { LectureInquire, putLectureAdd } from "../service/api";
-import { ButtonGroup } from "@mui/material";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
+import { DataGrid, GridEditRowsModel, GridRenderCellParams } from '@mui/x-data-grid';
+import { DataListBox, GRID_DEFAULT_LOCALE_TEXT } from '../config';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import CustomPagination from '../components/CustomPagination';
+import QuickSearchToolbar from '../components/QuickSearchToolbar';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import { LectureInquire, putLectureAdd } from '../service/api';
+import { ButtonGroup } from '@mui/material';
 
 type AdminProps = {
   id: number;
@@ -24,7 +24,7 @@ type AdminProps = {
   종료시간: string;
 };
 
-function Admin({ adminData: _adminData }: { adminData: LectureInquire["lectures"] }) {
+function Admin({ adminData: _adminData }: { adminData: LectureInquire['lectures'] }) {
   const [addVisible, setAddVisible] = useState(false);
   const [adminData, setAdminData] = useState<AdminProps[]>([]);
   const classNameRef: React.RefObject<HTMLInputElement> = useRef(null);
@@ -52,6 +52,10 @@ function Admin({ adminData: _adminData }: { adminData: LectureInquire["lectures"
   const handleClose = () => {
     setAddVisible(false);
   };
+
+  const EditRows = useCallback((rows: GridEditRowsModel) => {
+    console.log(rows);
+  }, []);
 
   const clickSaveBtn = async () => {
     const lectureName = classNameRef.current?.value;
@@ -114,24 +118,22 @@ function Admin({ adminData: _adminData }: { adminData: LectureInquire["lectures"
   };
 
   const BtnAddDeleteGroup = () => {
-    const deleteHandleClick = () => {
-      const filteredArray: AdminProps[] = [];
-      const newArray = [...adminData];
-
+    const deleteHandleClick = useCallback(() => {
+      const newAdminData = [...adminData];
       deleteRef.forEach((id) => {
-        newArray.forEach((item) => {
-          if (item.id !== id) {
-            filteredArray.push(item);
+        newAdminData.forEach((info, index) => {
+          if (id === info.id) {
+            newAdminData.splice(index, 1);
           }
         });
       });
-
-      console.log(filteredArray);
+      setTimeout(() => {
+        setAdminData(newAdminData);
+      }, 0);
       deleteRef = [];
-    };
-
+    }, []);
     return (
-      <Box sx={{ position: "absolute", top: 183, left: 700, color: "white" }}>
+      <Box sx={{ position: 'absolute', top: 182, left: 700, color: 'white' }}>
         <Button color="inherit" startIcon={<AddIcon />} onClick={handleClickOpen}>
           추가
         </Button>
@@ -149,18 +151,38 @@ function Admin({ adminData: _adminData }: { adminData: LectureInquire["lectures"
           rows={adminData}
           rowsPerPageOptions={[]}
           checkboxSelection
+          onEditRowsModelChange={EditRows}
           onSelectionModelChange={(item) => {
             const selectedIDs = new Set(item);
             selectedIdForDelete(selectedIDs);
           }}
           pagination
           columns={[
-            ...AdminColumns,
+            { field: 'NO', type: 'number', width: 100 },
+            { field: '수업명', type: 'string', width: 200, editable: true },
+            { field: '시작시간', type: 'string', width: 140, editable: true },
+            { field: '종료시간', type: 'string', width: 140, editable: true },
             {
-              field: "actions",
-              type: "actions",
-              width: 140,
-              getActions: () => [<GridActionsCellItem icon={<EditIcon />} label="Edit"></GridActionsCellItem>],
+              field: 'actions',
+              type: 'actions',
+              width: 155,
+              renderCell: (params: GridRenderCellParams) => {
+                const onClickModification = () => {
+                  console.log(params.row);
+                };
+                return (
+                  <Button
+                    variant="contained"
+                    color="inherit"
+                    size="small"
+                    style={{ borderRadius: 5 }}
+                    startIcon={<EditIcon />}
+                    onClick={onClickModification}
+                  >
+                    수정
+                  </Button>
+                );
+              },
             },
           ]}
           editMode="row"
