@@ -1,0 +1,47 @@
+:root {
+  --color-main: #00a29a;
+  --color-white: #ffffff;
+}
+
+.MuiDataGrid-root {
+  border: none !important;
+  border-radius: 15px;
+}
+
+.MuiSelect-select {
+  color: white !important;
+}
+
+.MuiDataGrid-columnHeaderTitleContainer {
+  justify-content: center;
+  color: var(--color-white);
+  font-size: 17px;
+}
+
+.MuiDataGrid-cell {
+  justify-content: center !important;
+}
+
+.MuiDataGrid-virtualScroller {
+  background-color: var(--color-white);
+}
+
+.MuiDataGrid-footerContainer {
+  display: flex;
+  justify-content: center !important;
+  color: var(--color-white);
+}
+
+.MuiDataGrid-selectedRowCount {
+  position: absolute;
+  left: 0;
+}
+.MuiTextField-root {
+  width: 100px;
+}
+
+.MuiTextField-root::placeholder {
+  text-align: center;
+  font-size: 10px;
+  width: 150px;
+}
