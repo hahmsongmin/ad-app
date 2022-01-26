@@ -3,6 +3,7 @@ import styled from "styled-components";
 import LogDataList from "./views/LogDataList";
 import "./views/dataList.css";
 import IconButton from "@mui/material/IconButton";
+import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import Button from "@mui/material/Button";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -19,11 +20,13 @@ import {
   getPresentInquire,
   LectureInquire,
   PresentInquire,
+  putPresent,
   setGlobalSpaceId,
 } from "./service/api";
 import AdDataList from "./views/AdDataList";
 import Admin from "./views/Admin";
 import { GRID_DEFAULT_LOCALE_TEXT } from "./config";
+import CustomAlert from "./components/CustomAlert";
 
 export type LogInfo = {
   memberName: string;
@@ -31,6 +34,14 @@ export type LogInfo = {
   enterDt: string;
   leaveDt: string;
   memberType: string;
+};
+
+export type LectureProps = {
+  [T: string]: {
+    lectureName: string;
+    startTime: string;
+    endTime: string;
+  };
 };
 
 const TEST_DATA: AdInquire = {
@@ -174,11 +185,17 @@ function App() {
   const [logDataInfo, setLogDataInfo] = useState<LogInfo[]>([]);
   const [concatData, setConcatData] = useState<ConcatType>({});
   const [adminData, setAdminData] = useState<LectureInquire["lectures"]>([]);
-  const [isConcatDataOK, setIsConcatDataOK] = useState<Boolean>(false);
+  const [isLectureDataOK, setIsLectureDataOK] = useState<Boolean>(false);
   const [lectureId, setLectureId] = useState<string[]>([]);
+  const [filteredLecture, setFilteredLecture] = useState<LectureProps>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [visible, setVisible] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(false);
+  const [adJoinBtnVisible, setAdJoinBtnVisible] = useState<boolean>(false);
+  const [selectedLectureId, setSelectedLectureId] = useState<string>("0");
+  const [alertErrorVisible, setAlertErrorVisible] = useState<boolean>(false);
+  const [alertNoteVisible, setAlertNoteVisible] = useState<boolean>(false);
+  const [alertSuccessVisible, setAlertSuccessVisible] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndtDate] = useState<string>("");
 
@@ -237,16 +254,31 @@ function App() {
       return `${year.trim()}.${month.trim().padStart(2, "0")}.${day.trim().padStart(2, "0")}`;
     };
 
+    const handleFilterLecture = (lectureResults: LectureInquire["lectures"]) => {
+      let filterResults: LectureProps = {};
+      lectureResults.forEach((lecture) => {
+        filterResults = {
+          ...filterResults,
+          [String(lecture.lectureId)]: {
+            lectureName: lecture.lectureName,
+            startTime: lecture.startTime,
+            endTime: lecture.endTime,
+          },
+        };
+      });
+      setFilteredLecture(filterResults);
+    };
+
     const getInitHandler = async () => {
       console.log("✅ 데이터 조회");
       try {
         const adResults: AdInquire["results"] = await getAdInquire();
         const lectureResults: LectureInquire["lectures"] | undefined = await getLectureInquire();
-        logDataInfo(TEST_DATA.results); // attend api 💡 adResults
+        logDataInfo(adResults); // attend api 💡 adResults
         // TEST 용
-        setConcatData(TEST_DATA1); // concatResultes
-        setLectureId(Object.keys(TEST_DATA1));
-        setIsConcatDataOK(true);
+        // setConcatData(TEST_DATA1); // concatResultes
+        // setLectureId(Object.keys(TEST_DATA1));
+        // setIsLectureDataOK(true);
         //
         if (lectureResults != null) {
           let _startDate = startDate;
@@ -258,10 +290,14 @@ function App() {
             _endDate = _startDate;
           }
           setAdminData(lectureResults);
+          setIsLectureDataOK(Object.keys(lectureResults).length > 0 ? true : false);
+          setLectureId(lectureResults.map((lecture) => String(lecture.lectureId)));
+          handleFilterLecture(lectureResults);
+          // => 출결정보 추가 (유저가 ? ) 참가 ? 참여 ?
+          console.log("Lecture : ", lectureResults);
           const concatResults: ConcatType = await getPresentInquire(lectureResults, _startDate, _endDate);
-          setIsConcatDataOK(Object.keys(concatResults).length > 0 ? true : false);
+          console.log("concatResults : ", concatResults);
           setConcatData(concatResults);
-          setLectureId(Object.keys(concatResults));
         }
       } catch {
       } finally {
@@ -277,25 +313,53 @@ function App() {
 
     // 스페이스 진입 => 클라(memberId, spaceId 로 api 출석 추가)
     // 스페이스 나갈시 => 클라(memberId, spaceId 로 api 퇴실 추가)
-    // 출석부 클릭 시 spaceId로 api 출석 조회 화면에 출력 (spaceId 넘겨주세요)
+    // 출석부 클릭 시 spaceId로 api 출석 조회 화면에 출력 ⭐(spaceId, memberId 넘겨주세요)
 
     const adBtn = document.querySelector(".ad")!;
     // 이벤트 정의 하세요(클라-출석부) =>
     const spaceId: number = 345;
+    const memberId: number = 5085;
     adBtn.addEventListener("click", () => {
       spaceIdRef.current = spaceId;
-      setGlobalSpaceId(spaceId);
+      setGlobalSpaceId(spaceId, memberId);
       getInitHandler();
     });
   }, [refresh, concatData, startDate, endDate]);
 
-  const searchDate = () => {
+  const childrenRefreshAuto = () => {
     setRefresh(true);
+  };
+
+  const isClickJoinBtn = async () => {
+    if (selectedLectureId === "0") {
+      setAlertNoteVisible(true);
+      setTimeout(() => {
+        setAlertNoteVisible(false);
+      }, 3000);
+    } else {
+      const reponse = await putPresent(Number(selectedLectureId));
+      if (reponse.code === 1000) {
+        setSelectedLectureId("");
+      }
+    }
+  };
+
+  const tabClickCheck = (isEdit: boolean, isAd: boolean) => {
+    GRID_DEFAULT_LOCALE_TEXT.isClickEdit = isEdit;
+    GRID_DEFAULT_LOCALE_TEXT.isClickAd = isAd;
+    if (isAd) {
+      setAdJoinBtnVisible(true);
+    } else {
+      setAdJoinBtnVisible(false);
+    }
   };
 
   return (
     <AppContainer className="App" visible={visible}>
       <Title>출결관리</Title>
+      {alertErrorVisible && <CustomAlert errorMsg="시작시간 또는 종료시간이 잘못되었습니다." />}
+      {alertNoteVisible && <CustomAlert errorMsg="상단의 참여하실 시간 설정을 선택해주세요." />}
+      {alertSuccessVisible && <CustomAlert successMsg="수정이 완료되었습니다." />}
       <CloseBtn className="close" onClick={() => setVisible(false)}>
         <IconButton color="inherit">
           <CloseIcon sx={{ fontSize: 30, color: "white" }} />
@@ -303,9 +367,9 @@ function App() {
       </CloseBtn>
       <TabsUnstyled defaultValue={0}>
         <TabsList>
-          <Tab onClick={() => (GRID_DEFAULT_LOCALE_TEXT.isClickEdit = false)}>출석 로그</Tab>
-          <Tab onClick={() => (GRID_DEFAULT_LOCALE_TEXT.isClickEdit = false)}>출석부</Tab>
-          <Tab onClick={() => (GRID_DEFAULT_LOCALE_TEXT.isClickEdit = true)}>수업 설정</Tab>
+          <Tab onClick={() => tabClickCheck(false, false)}>출석 로그</Tab>
+          <Tab onClick={() => tabClickCheck(false, true)}>출석부</Tab>
+          <Tab onClick={() => tabClickCheck(true, false)}>수업 설정</Tab>
         </TabsList>
         <TabPanel value={0}>
           <LogDataList logDataInfo={logDataInfo} />
@@ -314,22 +378,46 @@ function App() {
           <AdDataList
             concatData={concatData}
             lectureId={lectureId}
-            isConcatDataOK={isConcatDataOK}
+            isLectureDataOK={isLectureDataOK}
+            filteredLecture={filteredLecture}
             startDate={startDate}
             setStartDate={setStartDate}
             endDate={endDate}
             setEndtDate={setEndtDate}
-            searchDate={searchDate}
+            childrenRefreshAuto={childrenRefreshAuto}
+            setSelectedLectureId={setSelectedLectureId}
           />
         </TabPanel>
         <TabPanel value={2}>
-          <Admin adminData={adminData} />
+          <Admin
+            adminData={adminData}
+            childrenRefreshAuto={childrenRefreshAuto}
+            setAlertErrorVisible={setAlertErrorVisible}
+            setAlertSuccessVisible={setAlertSuccessVisible}
+          />
         </TabPanel>
       </TabsUnstyled>
       <ReFresh>
-        <Button onClick={() => setRefresh(true)} variant="contained" endIcon={<RefreshIcon />} sx={{ width: 120 }}>
+        <Button
+          onClick={() => setRefresh(true)}
+          variant="contained"
+          endIcon={<RefreshIcon />}
+          color="inherit"
+          sx={{ width: 110, fontSize: 12, height: 30 }}
+        >
           새로고침
         </Button>
+        {adJoinBtnVisible && (
+          <Button
+            variant="contained"
+            color="error"
+            endIcon={<DoneOutlineIcon />}
+            sx={{ width: 90, marginLeft: 2, fontSize: 12, height: 35, fontWeight: "bold" }}
+            onClick={isClickJoinBtn}
+          >
+            참여
+          </Button>
+        )}
       </ReFresh>
     </AppContainer>
   );
@@ -341,7 +429,7 @@ const AppContainer = styled.div<{ visible: boolean }>`
   display: ${(props) => (props.visible === true ? "flex" : "none")};
   position: relative;
   max-width: 790px;
-  height: 620px;
+  height: 600px;
   flex-direction: column;
   padding: 60px;
   padding-bottom: 50px;
@@ -358,8 +446,10 @@ const AppContainer = styled.div<{ visible: boolean }>`
 `;
 
 const ReFresh = styled.div`
+  display: flex;
+  align-items: center;
   position: absolute;
-  bottom: 30px;
+  bottom: 10px;
   right: 60px;
 `;
 

@@ -11,10 +11,11 @@ import CustomPagination from "../components/CustomPagination";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import DesktopDatePicker from "@mui/lab/DatePicker";
-import { ConcatType, postPresentModification } from "../service/api";
+import { ConcatType, postPresent } from "../service/api";
 import NativeSelect from "@mui/material/NativeSelect";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import Button from "@mui/material/Button";
+import { LectureProps } from "../App";
 
 export type RowsProps = {
   id: number;
@@ -32,25 +33,29 @@ const PRESENT = {
 function AdDataList({
   concatData,
   lectureId,
-  isConcatDataOK,
+  isLectureDataOK,
+  filteredLecture,
   startDate,
   setStartDate,
   endDate,
   setEndtDate,
-  searchDate,
+  childrenRefreshAuto,
+  setSelectedLectureId,
 }: {
   concatData: ConcatType;
   lectureId: string[];
-  isConcatDataOK: Boolean;
+  isLectureDataOK: Boolean;
+  filteredLecture: LectureProps;
   startDate: string;
   setStartDate: Dispatch<string>;
   endDate: string;
   setEndtDate: Dispatch<string>;
-  searchDate: () => void;
+  setSelectedLectureId: Dispatch<string>;
+  childrenRefreshAuto: () => void;
 }) {
   const [userAdData, setUserAdData] = useState<RowsProps[]>([]);
   const [howManyData, setHowManyData] = useState<string>("");
-  const [lectureName, setLectureName] = useState<string>("");
+  const [selectLectureName, setSelectLectureName] = useState<string>("");
   const selectedLectureRef = useRef<string>("");
 
   const handleEditRowsChange = useCallback((changedProps: GridEditRowsModel) => {
@@ -71,7 +76,7 @@ function AdDataList({
             present = "absent";
             break;
         }
-        postPresentModification(Number(presentId), present as string);
+        postPresent(Number(presentId), present as string);
         PRESENT.currentValue = "";
       }
     }
@@ -88,8 +93,12 @@ function AdDataList({
   };
 
   const selectOnchange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId: string = (selectedLectureRef.current = Object.values(event.target?.selectedOptions)[0]?.id);
-    adDataInfo(selectedId);
+    setSelectLectureName(event.target.value);
+    const selectedLectureId: string = (selectedLectureRef.current = Object.values(
+      event.target?.selectedOptions
+    )[0]?.id);
+    setSelectedLectureId(selectedLectureId);
+    adDataInfo(selectedLectureId);
   };
 
   const adDataInfo = useCallback(
@@ -106,7 +115,7 @@ function AdDataList({
             출결: info.present,
           };
         });
-        setLectureName(concatData[lectureId].lectureName);
+        setSelectLectureName(concatData[lectureId].lectureName);
         setUserAdData(newData);
       }
     },
@@ -114,22 +123,32 @@ function AdDataList({
   );
 
   useEffect(() => {
-    if (isConcatDataOK) {
+    if (isLectureDataOK) {
       selectedLectureRef.current = lectureId[0];
-      setLectureName(concatData[String(selectedLectureRef.current)]?.lectureName);
+      setSelectLectureName(concatData[String(selectedLectureRef.current)]?.lectureName);
       adDataInfo(String(concatData[lectureId[0]]?.lectureId));
     }
-  }, [adDataInfo, concatData, isConcatDataOK, lectureId]);
+  }, [adDataInfo, concatData, isLectureDataOK, lectureId]);
 
   const LectureSelect = () => {
     return (
-      <Box sx={{ minWidth: 120, position: "absolute", top: 70, left: 75 }}>
+      <Box
+        sx={{
+          maxWidth: 200,
+          position: "absolute",
+          top: 70,
+          left: 75,
+        }}
+      >
         <FormControl fullWidth>
           {selectedLectureRef.current && (
-            <NativeSelect defaultValue={lectureName} onChange={selectOnchange}>
+            <NativeSelect sx={{ fontSize: 17 }} onChange={selectOnchange} value={selectLectureName}>
+              <option value="참여시간설정" id="0">
+                참여시간설정
+              </option>
               {lectureId.sort().map((id) => (
-                <option key={id} id={id}>
-                  {concatData[id]?.lectureName}
+                <option key={id} id={id} value={filteredLecture[id]?.lectureName}>
+                  {filteredLecture[id]?.lectureName}
                 </option>
               ))}
             </NativeSelect>
@@ -182,7 +201,7 @@ function AdDataList({
             )}
           />
         </LocalizationProvider>
-        <Button sx={{ marginLeft: 1 }} onClick={searchDate}>
+        <Button sx={{ marginLeft: 1 }} onClick={childrenRefreshAuto}>
           검색
         </Button>
       </ButtonGroup>
@@ -216,7 +235,7 @@ function AdDataList({
         }}
         localeText={GRID_DEFAULT_LOCALE_TEXT}
       />
-      {isConcatDataOK && <LectureSelect />}
+      {isLectureDataOK && <LectureSelect />}
       <SearchCalendar />
     </Box>
   );

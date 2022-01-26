@@ -1,11 +1,11 @@
 import axios from "axios";
 
-type Common = {
+type CommonCode = {
   code: number;
   message: string;
 };
 
-export type AdInquire = Common & {
+export type AdInquire = CommonCode & {
   results: {
     spaceId: number;
     memberId: number;
@@ -16,7 +16,7 @@ export type AdInquire = Common & {
   }[];
 };
 
-export type LectureInquire = Common & {
+export type LectureInquire = CommonCode & {
   lectures: {
     lectureId: number;
     spaceId: number;
@@ -26,7 +26,7 @@ export type LectureInquire = Common & {
   }[];
 };
 
-export type PresentInquire = Common & {
+export type PresentInquire = CommonCode & {
   presents: {
     presentId: number;
     lectureId: number;
@@ -45,10 +45,12 @@ type UserProps = {
 };
 
 let GLOBAL_SPACE_ID: number = 1;
+let GLOBAL_MEMBER_ID: number = 1;
 const nickNameArray: UserProps = {};
 
-export const setGlobalSpaceId = (spaceId: number): void => {
+export const setGlobalSpaceId = (spaceId: number, memberId: number): void => {
   GLOBAL_SPACE_ID = spaceId;
+  GLOBAL_MEMBER_ID = memberId;
 };
 
 const apiBase = axios.create({
@@ -71,17 +73,6 @@ export const getAdInquire = async (): Promise<AdInquire["results"]> => {
     return data.results;
   } catch (e) {
     throw new Error("getAdInquire Faild");
-  }
-};
-
-export const getLectureInquire = async (): Promise<LectureInquire["lectures"] | undefined> => {
-  try {
-    const { data }: { data: LectureInquire } = await apiBase.get(`/lecture/${GLOBAL_SPACE_ID}`);
-    if (data.lectures != null) {
-      return data.lectures;
-    }
-  } catch (e) {
-    throw new Error("getLectureInquire Faild");
   }
 };
 
@@ -123,24 +114,24 @@ export const getPresentInquire = async (
             endDate,
           },
         });
-        if (data != null) {
-          adInfoConcat = {
-            ...adInfoConcat,
-            [String(info.lectureId)]: {
-              lectureId: info.lectureId,
-              spaceId: info.spaceId,
-              lectureName: info.lectureName,
-              startTime: info.startTime,
-              endTime: info.endTime,
-              person: data?.presents?.map((item) => {
-                return {
-                  ...item,
-                  memberName: getNickName(item.memberId),
-                };
-              }),
-            },
-          };
-        }
+        console.log(data);
+        adInfoConcat = {
+          ...adInfoConcat,
+          [String(info.lectureId)]: {
+            lectureId: info.lectureId,
+            spaceId: info.spaceId,
+            lectureName: info.lectureName,
+            startTime: info.startTime,
+            endTime: info.endTime,
+            person: data.presents.map((item) => {
+              return {
+                ...item,
+                memberName: getNickName(item.memberId),
+              };
+            }),
+          },
+        };
+        console.log(adInfoConcat);
       })
     );
   } catch (e) {
@@ -150,19 +141,51 @@ export const getPresentInquire = async (
   }
 };
 
-export const postPresentModification = async (presentId: number, present: string) => {
+export const postPresent = async (presentId: number, present: string) => {
   await apiBase.post(`/present/${presentId}`, { params: { presentId, present } });
 };
 
-export const putLectureAdd = async (lectureName: string, startTime: string, endTime: string) => {
-  console.log(lectureName, startTime, endTime);
-  const response = await apiBase.put(`/lecture/${GLOBAL_SPACE_ID}`, {
+export const putPresent = async (lectureId: number) => {
+  console.log(lectureId, GLOBAL_MEMBER_ID);
+  const { data }: { data: CommonCode } = await apiBase.put(`/present/${lectureId}`, {
+    params: { memberId: GLOBAL_MEMBER_ID, present: "absent" },
+  });
+  return data;
+};
+
+export const getLectureInquire = async (): Promise<LectureInquire["lectures"] | undefined> => {
+  try {
+    const { data }: { data: LectureInquire } = await apiBase.get(`/lecture/${GLOBAL_SPACE_ID}`);
+    if (data.lectures != null) {
+      return data.lectures;
+    }
+  } catch (e) {
+    throw new Error("getLectureInquire Faild");
+  }
+};
+
+export const putLecture = async (lectureName: string, startTime: string, endTime: string) => {
+  const { data }: { data: CommonCode } = await apiBase.put(`/lecture/${GLOBAL_SPACE_ID}`, {
     params: {
       lectureName,
       startTime,
       endTime,
     },
   });
-  if (response?.data?.code === 1000) {
-  }
+  return data;
+};
+
+export const postLecture = async (lectureId: number, lectureName: string, startTime: string, endTime: string) => {
+  const { data }: { data: CommonCode } = await apiBase.post(`/lecture/${lectureId}`, {
+    params: {
+      lectureName,
+      startTime,
+      endTime,
+    },
+  });
+  console.log(data);
+};
+
+export const deleteLecture = async (lectureId: number) => {
+  await apiBase.delete(`/lecture/${lectureId}`);
 };
