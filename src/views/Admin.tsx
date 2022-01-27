@@ -1,8 +1,8 @@
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/DeleteOutlined';
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import {
   DataGrid,
   GridCellParams,
@@ -11,19 +11,19 @@ import {
   GridRowParams,
   MuiBaseEvent,
   MuiEvent,
-} from '@mui/x-data-grid';
-import { DataListBox, GRID_DEFAULT_LOCALE_TEXT } from '../config';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import CustomPagination from '../components/CustomPagination';
-import QuickSearchToolbar from '../components/QuickSearchToolbar';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
-import IMCLASS from '../service/api';
-import { LectureInquire } from '../types';
+} from "@mui/x-data-grid";
+import { DataListBox, GRID_DEFAULT_LOCALE_TEXT } from "../config";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import CustomPagination from "../components/CustomPagination";
+import QuickSearchToolbar from "../components/QuickSearchToolbar";
+import TextField from "@mui/material/TextField";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import IMCLASS from "../service/api";
+import { LectureInquire } from "../types";
 
 type AdminProps = {
   id: number;
@@ -43,13 +43,13 @@ function Admin({
   setAlertSuccessVisible,
 }: {
   apiCaller: IMCLASS;
-  adminData: LectureInquire['lectures'];
+  adminData: LectureInquire["lectures"];
   childrenRefreshAuto: () => void;
   setAlertErrorVisible: React.Dispatch<boolean>;
   setAlertSuccessVisible: React.Dispatch<boolean>;
 }) {
   const [addVisible, setAddVisible] = useState(false);
-  const [howManyData, setHowManyData] = useState<string>('');
+  const [howManyData, setHowManyData] = useState<string>("");
   const [adminData, setAdminData] = useState<AdminProps[]>([]);
   const classNameRef: React.RefObject<HTMLInputElement> = useRef(null);
   const startTimeRef: React.RefObject<HTMLInputElement> = useRef(null);
@@ -114,14 +114,15 @@ function Admin({
     if (lectureName != null && startTime != null && endTime != null) {
       if (regTimeRef.test(startTime) && regTimeRef.test(endTime)) {
         const data = await apiCaller.putLecture(lectureName, startTime, endTime);
+        console.log(data);
         if (data.code === 1000) childrenRefreshAuto();
         setAddVisible(false);
       } else {
-        if (lectureName === '') {
+        if (lectureName === "") {
           classNameRef.current?.focus();
-        } else if (startTime === '' || !regTimeRef.test(startTime)) {
+        } else if (startTime === "" || !regTimeRef.test(startTime)) {
           startTimeRef.current?.focus();
-        } else if (endTime === '' || !regTimeRef.test(endTime)) {
+        } else if (endTime === "" || !regTimeRef.test(endTime)) {
           endTimeRef.current?.focus();
         }
       }
@@ -199,7 +200,7 @@ function Admin({
       deleteRef = [];
     }, []);
     return (
-      <Box sx={{ position: 'absolute', top: 182, left: 700, color: 'white' }}>
+      <Box sx={{ position: "absolute", top: 188, left: 700, color: "white" }}>
         <Button color="inherit" startIcon={<AddIcon />} onClick={handleClickOpen}>
           추가
         </Button>
@@ -211,7 +212,7 @@ function Admin({
   };
 
   const handleKeyDownRow = (params: GridCellParams, event: MuiEvent<React.KeyboardEvent>) => {
-    if (event.code === 'Enter') {
+    if (event.code === "Enter") {
       event.preventDefault();
       return;
     }
@@ -224,8 +225,8 @@ function Admin({
   return (
     <>
       <Box sx={DataListBox}>
-        <FormControl sx={{ zIndex: 10, m: 1, minWidth: 100, position: 'absolute', transform: 'translate(85px, -5px)' }}>
-          <InputLabel id="demo-simple-select-disabled-label" sx={{ color: 'white', fontSize: 14 }}>
+        <FormControl sx={{ zIndex: 10, m: 1, minWidth: 100, position: "absolute", transform: "translate(85px, -5px)" }}>
+          <InputLabel id="demo-simple-select-disabled-label" sx={{ color: "white", fontSize: 14 }}>
             모아보기
           </InputLabel>
           <Select sx={{ height: 50 }} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
@@ -245,18 +246,18 @@ function Admin({
           }}
           pagination
           columns={[
-            { field: 'NO', type: 'number', width: 100 },
+            { field: "NO", type: "number", width: 100 },
             {
-              field: '시간설정',
-              type: 'string',
+              field: "시간설정",
+              type: "string",
               width: 200,
               editable: true,
             },
-            { field: '시작시간', type: 'string', width: 140, editable: true },
-            { field: '종료시간', type: 'string', width: 140, editable: true },
+            { field: "시작시간", type: "string", width: 140, editable: true },
+            { field: "종료시간", type: "string", width: 140, editable: true },
             {
-              field: 'actions',
-              type: 'actions',
+              field: "actions",
+              type: "actions",
               width: 155,
               renderCell: (params: GridRenderCellParams) => {
                 const onClickModification = () => {

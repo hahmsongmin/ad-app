@@ -4,6 +4,7 @@ export type CommonCode = {
 };
 
 export type LogInfo = {
+  memberId: number;
   memberName: string;
   date: string;
   enterDt: string;
@@ -19,15 +20,18 @@ export type LectureProps = {
   };
 };
 
+export type AdInquireObj = {
+  spaceName: string;
+  spaceId: number;
+  memberId: number;
+  memberName: string;
+  isMember: string;
+  enterDt: string;
+  leaveDt: string | null;
+};
+
 export type AdInquire = CommonCode & {
-  results: {
-    spaceId: number;
-    memberId: number;
-    memberName: string;
-    isMember: string;
-    enterDt: string;
-    leaveDt: string | null;
-  }[];
+  results: AdInquireObj[];
 };
 
 export type LectureInquire = CommonCode & {
@@ -40,15 +44,17 @@ export type LectureInquire = CommonCode & {
   }[];
 };
 
+export type PresentInquireObj = {
+  presentId: number;
+  lectureId: number;
+  memberId: number;
+  presentDate: string;
+  present: string;
+  isMember: string;
+};
+
 export type PresentInquire = CommonCode & {
-  presents: {
-    presentId: number;
-    lectureId: number;
-    memberId: number;
-    presentDate: string;
-    present: string;
-    isMember: string;
-  }[];
+  presents: PresentInquireObj[];
 };
 
 export type UserProps = {
@@ -58,6 +64,10 @@ export type UserProps = {
   };
 };
 
+type PersonProps = PresentInquireObj & {
+  memberName: string;
+};
+
 export type ConcatType = {
   [key: string]: {
     lectureId: number;
@@ -65,14 +75,6 @@ export type ConcatType = {
     lectureName: string;
     startTime: string;
     endTime: string;
-    person: {
-      presentId: number;
-      lectureId: number;
-      memberName: string;
-      memberId: number;
-      presentDate: string;
-      present: string;
-      isMember: string;
-    }[];
+    person: PersonProps[];
   };
 };

@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import Box from '@mui/material/Box';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
-import { DataListBox, FromControl, GRID_DEFAULT_LOCALE_TEXT, LogColumns } from '../config';
-import QuickSearchToolbar from '../components/QuickSearchToolbar';
-import CustomPagination from '../components/CustomPagination';
-import { LogInfo } from '../types';
+import { useEffect, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
+import Box from "@mui/material/Box";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import { DataListBox, FromControl, GRID_DEFAULT_LOCALE_TEXT, LogColumns } from "../config";
+import QuickSearchToolbar from "../components/QuickSearchToolbar";
+import CustomPagination from "../components/CustomPagination";
+import { LogInfo } from "../types";
 
 type RowsProps = {
   id: number;
@@ -21,7 +21,7 @@ type RowsProps = {
 
 function LogDataList({ logDataInfo: _logDataInfo }: { logDataInfo: Array<LogInfo> }) {
   const [userLogData, setUserLogData] = useState<RowsProps[]>([]);
-  const [howManyData, setHowManyData] = useState<string>('');
+  const [howManyData, setHowManyData] = useState<string>("");
   const handleChange = (event: SelectChangeEvent) => {
     setHowManyData(event.target.value);
   };
@@ -34,7 +34,7 @@ function LogDataList({ logDataInfo: _logDataInfo }: { logDataInfo: Array<LogInfo
         날짜: info.date,
         입장: info.enterDt,
         퇴장: info.leaveDt,
-        타입: info.memberType === 'Y' ? '멤버' : '게스트',
+        타입: info.memberType === "Y" ? "멤버" : "게스트",
       };
     });
     setUserLogData(data);
@@ -43,7 +43,7 @@ function LogDataList({ logDataInfo: _logDataInfo }: { logDataInfo: Array<LogInfo
   return (
     <Box sx={DataListBox}>
       <FormControl sx={FromControl}>
-        <InputLabel id="demo-simple-select-disabled-label" sx={{ color: 'white', fontSize: 14 }}>
+        <InputLabel id="demo-simple-select-disabled-label" sx={{ color: "white", fontSize: 14 }}>
           모아보기
         </InputLabel>
         <Select sx={{ height: 50 }} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
