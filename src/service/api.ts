@@ -32,7 +32,7 @@ class ApiCallers implements IApiProvider {
       withCredentials: true,
     });
   }
-  getNickName(memberId: number): string {
+  private getNickName(memberId: number): string {
     if (this.nickNameObject[String(memberId)]) {
       return this.nickNameObject[String(memberId)].memberName;
     }
@@ -104,8 +104,7 @@ class ApiCallers implements IApiProvider {
   };
 
   postPresent = async (presentId: number, present: string) => {
-    const response = await this.apiBase.post(`/present/${presentId}`, { params: { presentId, present } });
-    console.log(response);
+    await this.apiBase.post(`/present/${presentId}`, { params: { presentId, present } });
   };
 
   putPresent = async (lectureId: number): Promise<CommonCode> => {

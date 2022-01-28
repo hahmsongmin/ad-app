@@ -39,6 +39,9 @@ interface GridLocaleText {
   filterOperatorEndsWith: string;
   filterOperatorIsEmpty: string;
   filterOperatorIsNotEmpty: string;
+  filterOperatorIs: string;
+  filterOperatorNot: string;
+  filterOperatorIsAnyOf: string;
   isClickEdit: boolean;
   isClickAd: boolean;
   //
@@ -86,6 +89,9 @@ export const GRID_DEFAULT_LOCALE_TEXT: GridLocaleText = {
   filterOperatorEndsWith: "끝",
   filterOperatorIsEmpty: "비어있음",
   filterOperatorIsNotEmpty: "비어있지않음",
+  filterOperatorIs: "=",
+  filterOperatorNot: "!=",
+  filterOperatorIsAnyOf: "멀티검색",
   //
 
   isClickEdit: false,
@@ -100,8 +106,9 @@ export const GRID_DEFAULT_LOCALE_TEXT: GridLocaleText = {
   },
 };
 
-// styles
+// styles =>
 
+// DataList
 const COLUMNS_WIDTH: number = 140;
 
 export const DataListBox = {
@@ -116,16 +123,24 @@ export const DataListBox = {
   },
 };
 
-export const FromControl = {
+export const FormControlStyle = {
   zIndex: 10,
   m: 1,
   minWidth: 100,
   position: "absolute",
-  transform: "translate(165px, -5px)",
+  transform: "translate(145px, -15px)",
 };
 
-// columns
+export const InputLabelStyle = {
+  color: "white",
+  fontSize: 14,
+};
 
+export const SelectStyle = {
+  height: 50,
+};
+
+// columns =>
 export const LogColumns = [
   { field: "닉네임", type: "string", width: COLUMNS_WIDTH },
   { field: "날짜", type: "string", width: COLUMNS_WIDTH },

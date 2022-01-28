@@ -1,11 +1,19 @@
 import React, { Dispatch, useCallback, useEffect, useRef, useState } from "react";
 import { DataGrid, GridEditRowsModel, GridRowParams } from "@mui/x-data-grid";
+import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
-import { AdColumns, DataListBox, FromControl, GRID_DEFAULT_LOCALE_TEXT } from "../config";
+import {
+  AdColumns,
+  DataListBox,
+  FormControlStyle,
+  GRID_DEFAULT_LOCALE_TEXT,
+  InputLabelStyle,
+  SelectStyle,
+} from "../config";
 import QuickSearchToolbar from "../components/QuickSearchToolbar";
 import CustomPagination from "../components/CustomPagination";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
@@ -16,6 +24,7 @@ import ButtonGroup from "@mui/material/ButtonGroup";
 import Button from "@mui/material/Button";
 import { ConcatType, LectureProps } from "../types";
 import IMCLASS from "../service/api";
+import SearchCalendar from "../components/SearchCalendar";
 
 type RowsProps = {
   id: number;
@@ -126,7 +135,6 @@ function AdDataList({
           };
         });
         setSelectLectureName(concatData[lectureId].lectureName);
-        console.log(newData);
         setUserAdData(newData);
       }
     },
@@ -143,17 +151,10 @@ function AdDataList({
 
   const LectureSelect = () => {
     return (
-      <Box
-        sx={{
-          maxWidth: 200,
-          position: "absolute",
-          top: 70,
-          left: 75,
-        }}
-      >
+      <LectureSelectBox>
         <FormControl fullWidth>
           {selectedLectureRef.current && (
-            <NativeSelect sx={{ fontSize: 17 }} onChange={selectOnchange} value={selectLectureName}>
+            <NativeSelect onChange={selectOnchange} value={selectLectureName}>
               <option value="참여시간설정" id="0">
                 참여시간설정
               </option>
@@ -165,11 +166,11 @@ function AdDataList({
             </NativeSelect>
           )}
         </FormControl>
-      </Box>
+      </LectureSelectBox>
     );
   };
 
-  const SearchCalendar = () => {
+  const SCalendar = () => {
     return (
       <ButtonGroup
         disableElevation
@@ -221,11 +222,11 @@ function AdDataList({
 
   return (
     <Box sx={DataListBox}>
-      <FormControl sx={FromControl}>
-        <InputLabel id="demo-simple-select-disabled-label" sx={{ color: "white", fontSize: 14 }}>
+      <FormControl sx={FormControlStyle}>
+        <InputLabel id="demo-simple-select-disabled-label" sx={InputLabelStyle}>
           모아보기
         </InputLabel>
-        <Select sx={{ height: 50 }} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
+        <Select sx={SelectStyle} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
           <MenuItem value="25">25개씩</MenuItem>
           <MenuItem value="50">50개씩</MenuItem>
           <MenuItem value="100">100개씩</MenuItem>
@@ -253,3 +254,9 @@ function AdDataList({
 }
 
 export default AdDataList;
+
+const LectureSelectBox = styled(Box)({
+  maxWidth: 200,
+  position: "absolute",
+  transform: "translate(5px, -50px)",
+});

@@ -9,7 +9,7 @@
 }
 
 .MuiSelect-select {
-  color: white !important;
+  color: var(--color-white) !important;
 }
 
 .MuiDataGrid-columnHeaderTitleContainer {

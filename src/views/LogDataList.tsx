@@ -5,7 +5,14 @@ import Select, { SelectChangeEvent } from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
-import { DataListBox, FromControl, GRID_DEFAULT_LOCALE_TEXT, LogColumns } from "../config";
+import {
+  DataListBox,
+  FormControlStyle,
+  GRID_DEFAULT_LOCALE_TEXT,
+  InputLabelStyle,
+  LogColumns,
+  SelectStyle,
+} from "../config";
 import QuickSearchToolbar from "../components/QuickSearchToolbar";
 import CustomPagination from "../components/CustomPagination";
 import { LogInfo } from "../types";
@@ -42,11 +49,11 @@ function LogDataList({ logDataInfo: _logDataInfo }: { logDataInfo: Array<LogInfo
 
   return (
     <Box sx={DataListBox}>
-      <FormControl sx={FromControl}>
-        <InputLabel id="demo-simple-select-disabled-label" sx={{ color: "white", fontSize: 14 }}>
+      <FormControl sx={FormControlStyle}>
+        <InputLabel id="demo-simple-select-disabled-label" sx={InputLabelStyle}>
           모아보기
         </InputLabel>
-        <Select sx={{ height: 50 }} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
+        <Select sx={SelectStyle} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
           <MenuItem value="25">25개씩</MenuItem>
           <MenuItem value="50">50개씩</MenuItem>
           <MenuItem value="100">100개씩</MenuItem>

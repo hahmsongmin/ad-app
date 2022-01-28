@@ -12,7 +12,8 @@ import {
   MuiBaseEvent,
   MuiEvent,
 } from "@mui/x-data-grid";
-import { DataListBox, GRID_DEFAULT_LOCALE_TEXT } from "../config";
+import { styled } from "@mui/material/styles";
+import { DataListBox, FormControlStyle, GRID_DEFAULT_LOCALE_TEXT, InputLabelStyle, SelectStyle } from "../config";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import CustomPagination from "../components/CustomPagination";
 import QuickSearchToolbar from "../components/QuickSearchToolbar";
@@ -200,16 +201,23 @@ function Admin({
       deleteRef = [];
     }, []);
     return (
-      <Box sx={{ position: "absolute", top: 188, left: 700, color: "white" }}>
+      <AddDeleteBtn>
         <Button color="inherit" startIcon={<AddIcon />} onClick={handleClickOpen}>
           추가
         </Button>
         <Button color="inherit" startIcon={<DeleteIcon />} onClick={deleteHandleClick}>
           삭제
         </Button>
-      </Box>
+      </AddDeleteBtn>
     );
   };
+
+  const AddDeleteBtn = styled(Box)({
+    position: "absolute",
+    color: "white",
+    top: 165,
+    right: 75,
+  });
 
   const handleKeyDownRow = (params: GridCellParams, event: MuiEvent<React.KeyboardEvent>) => {
     if (event.code === "Enter") {
@@ -225,11 +233,11 @@ function Admin({
   return (
     <>
       <Box sx={DataListBox}>
-        <FormControl sx={{ zIndex: 10, m: 1, minWidth: 100, position: "absolute", transform: "translate(85px, -5px)" }}>
-          <InputLabel id="demo-simple-select-disabled-label" sx={{ color: "white", fontSize: 14 }}>
+        <FormControl sx={{ ...FormControlStyle, left: 0 }}>
+          <InputLabel id="demo-simple-select-disabled-label" sx={InputLabelStyle}>
             모아보기
           </InputLabel>
-          <Select sx={{ height: 50 }} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
+          <Select sx={SelectStyle} variant="outlined" onChange={handleChange} value={howManyData} label="모아보기">
             <MenuItem value="25">25개씩</MenuItem>
             <MenuItem value="50">50개씩</MenuItem>
             <MenuItem value="100">100개씩</MenuItem>

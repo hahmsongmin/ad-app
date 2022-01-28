@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import LogDataList from "./views/LogDataList";
-import "./views/dataList.css";
+import "./views/DataList.css";
 import IconButton from "@mui/material/IconButton";
 import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
 import CloseIcon from "@mui/icons-material/Close";
@@ -314,6 +314,7 @@ const Title = styled.h1`
   text-align: center;
   margin-bottom: 20px;
   font-size: 35px;
+  transform: translateY(-40%);
 `;
 
 const CloseBtn = styled.div`
@@ -370,7 +371,7 @@ const TabsList = styled(TabsListUnstyled)`
   z-index: 10;
   position: absolute;
   left: 385px;
-  top: 104px;
+  top: 92px;
   min-width: 370px;
   border-radius: 8px;
   margin-top: 16px;

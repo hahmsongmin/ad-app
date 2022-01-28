@@ -1,31 +1,36 @@
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
+import { styled } from "@mui/material/styles";
 
 const CustomAlert = ({ successMsg, errorMsg }: { successMsg?: string; errorMsg?: string }) => {
   return (
-    <Stack sx={{ width: "40%", position: "absolute", transform: "translate(60%, 500%)", zIndex: 10 }} spacing={2}>
+    <StackContainer spacing={2}>
       {errorMsg && (
-        <Alert
-          severity="error"
-          variant="filled"
-          color="error"
-          sx={{ display: "flex", justifyContent: "center", textAlign: "center" }}
-        >
+        <AlertS severity="error" variant="filled" color="error">
           {errorMsg}
-        </Alert>
+        </AlertS>
       )}
       {successMsg && (
-        <Alert
-          severity="success"
-          variant="filled"
-          color="info"
-          sx={{ display: "flex", justifyContent: "center", textAlign: "center" }}
-        >
+        <AlertS severity="success" variant="filled" color="info">
           {successMsg}
-        </Alert>
+        </AlertS>
       )}
-    </Stack>
+    </StackContainer>
   );
 };
 
 export default CustomAlert;
+
+const StackContainer = styled(Stack)({
+  width: "40%",
+  position: "absolute",
+  top: 350,
+  left: 280,
+  zIndex: 10,
+});
+
+const AlertS = styled(Alert)({
+  display: "flex",
+  justifyContent: "center",
+  textAlign: "center",
+});
