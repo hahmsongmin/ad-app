@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import { Dispatch, useState } from 'react';
 import { DateRange, Range, RangeKeyDict } from 'react-date-range';
 import styled from 'styled-components';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
-const SearchCalendar = () => {
+const SearchCalendar = ({
+  closeCalendarBtn,
+  childrenRefreshAuto,
+  setStartDate,
+  setEndtDate,
+}: {
+  closeCalendarBtn: () => void;
+  childrenRefreshAuto: () => void;
+  setStartDate: Dispatch<string>;
+  setEndtDate: Dispatch<string>;
+}) => {
   const [selectedState, setSelectedState] = useState<Range[]>([
     {
       startDate: new Date(),
@@ -24,34 +36,76 @@ const SearchCalendar = () => {
     const [endYear, endMonth, endtDay] = _endTemp;
     const startDate = `${startYear.trim()}.${startMonth.trim().padStart(2, '0')}.${startDay.trim().padStart(2, '0')}`;
     const endDate = `${endYear.trim()}.${endMonth.trim().padStart(2, '0')}.${endtDay.trim().padStart(2, '0')}`;
-    console.log(startDate, endDate);
+    setStartDate(startDate);
+    setEndtDate(endDate);
+    childrenRefreshAuto();
   };
 
   return (
-    <Container>
-      <DateRange
-        editableDateInputs={true}
-        onChange={handleChange}
-        moveRangeOnFirstSelection={false}
-        ranges={selectedState}
-        rangeColors={['red', 'blue']}
-      />
-    </Container>
+    <MainContainer>
+      <DateContainer>
+        <DateRange
+          editableDateInputs={true}
+          onChange={handleChange}
+          moveRangeOnFirstSelection={false}
+          ranges={selectedState}
+          rangeColors={['#00a29a', 'red']}
+          direction="horizontal"
+        />
+        <CloseBtn onClick={closeCalendarBtn}>
+          <IconButton color="inherit">
+            <CloseIcon sx={{ fontSize: 30, color: '#00a29a' }} />
+          </IconButton>
+        </CloseBtn>
+      </DateContainer>
+    </MainContainer>
   );
 };
 
 export default SearchCalendar;
 
-const Container = styled.div`
-  text-align: center;
+const MainContainer = styled.div`
   position: absolute;
-  right: 60px;
-  top: 50px;
+  z-index: 19;
+  width: 470px;
+  height: 575px;
+  background-color: whitesmoke;
+  border-radius: 15px;
+  transform: translate(68%, -10%);
+  box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.35);
+  -webkit-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.35);
+  -moz-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.35);
+`;
+
+const CloseBtn = styled.div`
+  position: absolute;
+  top: -30px;
+  right: 10px;
+  text-align: end;
+`;
+
+const DateContainer = styled.div`
+  box-sizing: border-box;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  transform: translateY(8%);
+  align-items: center;
   z-index: 20;
   .rdrDay {
-    height: 3.5em;
+    height: 4em;
   }
   .rdrMonth {
-    border-radius: 10px;
+    border-radius: 5px;
+  }
+  .rdrInRange {
+    background-color: #9e9e9e !important;
+  }
+  .rdrDayInPreview {
+    border-top: 1px solid #9e9e9e;
+    border-bottom: 1px solid #9e9e9e;
+  }
+  .rdrDayStartPreview {
+    border: 2px solid #9e9e9e;
   }
 `;

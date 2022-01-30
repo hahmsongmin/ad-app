@@ -1,75 +1,75 @@
-import { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
-import LogDataList from "./views/LogDataList";
-import "./views/DataList.css";
-import IconButton from "@mui/material/IconButton";
-import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
-import CloseIcon from "@mui/icons-material/Close";
-import Button from "@mui/material/Button";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import TabsUnstyled from "@mui/base/TabsUnstyled";
-import TabsListUnstyled from "@mui/base/TabsListUnstyled";
-import TabPanelUnstyled from "@mui/base/TabPanelUnstyled";
-import { buttonUnstyledClasses } from "@mui/base/ButtonUnstyled";
-import TabUnstyled, { tabUnstyledClasses } from "@mui/base/TabUnstyled";
-import { AdInquire, AdInquireObj, ConcatType, LectureInquire, LectureProps, LogInfo } from "./types";
-import AdDataList from "./views/AdDataList";
-import Admin from "./views/Admin";
-import { GRID_DEFAULT_LOCALE_TEXT } from "./config";
-import CustomAlert from "./components/CustomAlert";
-import IMCLASS from "./service/api";
-import { LogTest } from "./TestData";
+import { useEffect, useRef, useState } from 'react';
+import styled from 'styled-components';
+import LogDataList from './views/LogDataList';
+import './views/DataList.css';
+import IconButton from '@mui/material/IconButton';
+import DoneOutlineIcon from '@mui/icons-material/DoneOutline';
+import CloseIcon from '@mui/icons-material/Close';
+import Button from '@mui/material/Button';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import TabsUnstyled from '@mui/base/TabsUnstyled';
+import TabsListUnstyled from '@mui/base/TabsListUnstyled';
+import TabPanelUnstyled from '@mui/base/TabPanelUnstyled';
+import { buttonUnstyledClasses } from '@mui/base/ButtonUnstyled';
+import TabUnstyled, { tabUnstyledClasses } from '@mui/base/TabUnstyled';
+import { AdInquire, AdInquireObj, ConcatType, LectureInquire, LectureProps, LogInfo } from './types';
+import AdDataList from './views/AdDataList';
+import Admin from './views/Admin';
+import { GRID_DEFAULT_LOCALE_TEXT } from './config';
+import CustomAlert from './components/CustomAlert';
+import IMCLASS from './service/api';
+import { LogTest } from './TestData';
 
 function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const [logDataInfo, setLogDataInfo] = useState<LogInfo[]>([]);
   const [concatData, setConcatData] = useState<ConcatType>({});
-  const [adminData, setAdminData] = useState<LectureInquire["lectures"]>([]);
+  const [adminData, setAdminData] = useState<LectureInquire['lectures']>([]);
   const [isLectureDataOK, setIsLectureDataOK] = useState<Boolean>(false);
   const [lectureId, setLectureId] = useState<string[]>([]);
   const [filteredLecture, setFilteredLecture] = useState<LectureProps>({});
   const [visible, setVisible] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(false);
   const [adJoinBtnVisible, setAdJoinBtnVisible] = useState<boolean>(false);
-  const [selectedLectureId, setSelectedLectureId] = useState<string>("0");
+  const [selectedLectureId, setSelectedLectureId] = useState<string>('0');
   const [alertErrorVisible, setAlertErrorVisible] = useState<boolean>(false);
   const [alertNoteVisible, setAlertNoteVisible] = useState<boolean>(false);
   const [alertSuccessVisible, setAlertSuccessVisible] = useState<boolean>(false);
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndtDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndtDate] = useState<string>('');
 
   const spaceIdRef = useRef<number>(0);
 
   useEffect(() => {
     const commonDt = (Dt: string): string => {
-      return new Date(new Date(Dt).getTime() + 540 * 60 * 1000).toLocaleString("ko-KR");
+      return new Date(new Date(Dt).getTime() + 540 * 60 * 1000).toLocaleString('ko-KR');
     };
 
     const transferDate = (_enterDt: string): string => {
-      const dateTemp = commonDt(_enterDt).slice(2, 13).replaceAll(" ", "");
+      const dateTemp = commonDt(_enterDt).slice(2, 13).replaceAll(' ', '');
       const date = [
-        dateTemp.split(".")[0],
-        dateTemp.split(".")[1].padStart(2, "0"),
-        dateTemp.split(".")[2].padStart(2, "0"),
+        dateTemp.split('.')[0],
+        dateTemp.split('.')[1].padStart(2, '0'),
+        dateTemp.split('.')[2].padStart(2, '0'),
       ]
         .join()
-        .replaceAll(",", ".");
+        .replaceAll(',', '.');
       return date;
     };
 
-    const transferTime = (_enterDt: string, _leaveDt: string = ""): [string, string] => {
-      const dtTemp = commonDt(_enterDt).split(" ")[commonDt(_enterDt).split(" ").length - 1].split(":");
-      const enterDt = [String(dtTemp[0]).padStart(2, "0"), String(dtTemp[1]).padStart(2, "0")].join(":");
+    const transferTime = (_enterDt: string, _leaveDt: string = ''): [string, string] => {
+      const dtTemp = commonDt(_enterDt).split(' ')[commonDt(_enterDt).split(' ').length - 1].split(':');
+      const enterDt = [String(dtTemp[0]).padStart(2, '0'), String(dtTemp[1]).padStart(2, '0')].join(':');
       let leaveDt = _leaveDt;
-      if (_leaveDt === "") {
+      if (_leaveDt === '') {
         leaveDt = _leaveDt;
       } else {
-        const dtTemp = commonDt(_leaveDt).split(" ")[commonDt(_leaveDt).split(" ").length - 1].split(":");
-        leaveDt = [String(dtTemp[0]).padStart(2, "0"), String(dtTemp[1]).padStart(2, "0")].join(":");
+        const dtTemp = commonDt(_leaveDt).split(' ')[commonDt(_leaveDt).split(' ').length - 1].split(':');
+        leaveDt = [String(dtTemp[0]).padStart(2, '0'), String(dtTemp[1]).padStart(2, '0')].join(':');
       }
       return [enterDt, leaveDt];
     };
 
-    const transferLogDataInfo = (_result: AdInquire["results"]) => {
+    const transferLogDataInfo = (_result: AdInquire['results']) => {
       const infoArray: LogInfo[] = [];
       const newData = [..._result];
       const removeDuplicatedMemberId = newData.reverse().reduce((acc: AdInquireObj[], curr: AdInquireObj) => {
@@ -84,8 +84,8 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           memberName: info.memberName,
           date: transferDate(info.enterDt),
           enterDt: transferTime(info.enterDt)[0],
-          leaveDt: info.leaveDt === null ? "" : transferTime(info.enterDt, info.leaveDt)[1],
-          memberType: info.isMember ?? "",
+          leaveDt: info.leaveDt === null ? '' : transferTime(info.enterDt, info.leaveDt)[1],
+          memberType: info.isMember ?? '',
         };
         infoArray.push(logData);
       });
@@ -97,14 +97,14 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     };
 
     const getTodate = (): string => {
-      const date: string[] = new Date().toLocaleString().split(".")!;
+      const date: string[] = new Date().toLocaleString().split('.')!;
       const year = date[0];
       const month = date[1];
       const day = date[2];
-      return `${year.trim()}.${month.trim().padStart(2, "0")}.${day.trim().padStart(2, "0")}`;
+      return `${year.trim()}.${month.trim().padStart(2, '0')}.${day.trim().padStart(2, '0')}`;
     };
 
-    const handleFilterLecture = (lectureResults: LectureInquire["lectures"]) => {
+    const handleFilterLecture = (lectureResults: LectureInquire['lectures']) => {
       let filterResults: LectureProps = {};
       lectureResults.forEach((lecture) => {
         filterResults = {
@@ -120,22 +120,23 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     };
 
     const getInitHandler = async () => {
-      console.log("✅ 데이터 조회");
+      console.log('✅ 데이터 조회');
       try {
-        const adResults: AdInquire["results"] = await apiCaller.getAdInquire();
-        const lectureResults: LectureInquire["lectures"] | undefined = await apiCaller.getLectureInquire();
+        const adResults: AdInquire['results'] = await apiCaller.getAdInquire();
+        const lectureResults: LectureInquire['lectures'] | undefined = await apiCaller.getLectureInquire();
 
         transferLogDataInfo(LogTest.results); //  adResults 출석로그 출력
 
         if (lectureResults != null) {
           let _startDate = startDate;
           let _endDate = endDate;
-          if (_startDate === "" && _endDate === "") {
+          if (_startDate === '' && _endDate === '') {
             _startDate = getTodate();
             _endDate = getTodate();
-          } else if (_endDate === "") {
+          } else if (_endDate === '') {
             _endDate = _startDate;
           }
+
           setAdminData(lectureResults);
           setIsLectureDataOK(Object.keys(lectureResults).length > 0 ? true : false);
           setLectureId(lectureResults.map((lecture) => String(lecture.lectureId)));
@@ -168,11 +169,11 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     // 스페이스 나갈시 => 클라(memberId, spaceId 로 api 퇴실 추가)
     // 출석부 클릭 시 spaceId로 api 출석 조회 화면에 출력 ⭐(spaceId, memberId 넘겨주세요)
 
-    const adBtn = document.querySelector(".ad")!;
+    const adBtn = document.querySelector('.ad')!;
     // 이벤트 정의 하세요(클라-출석부) =>
     const spaceId: number = 345;
     const memberId: number = 5085;
-    adBtn.addEventListener("click", () => {
+    adBtn.addEventListener('click', () => {
       spaceIdRef.current = spaceId;
       apiCaller.setSpaceAndMemberId(spaceId, memberId);
       getInitHandler();
@@ -185,7 +186,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
 
   const isClickJoinBtn = async () => {
     console.log(selectedLectureId);
-    if (selectedLectureId === "0") {
+    if (selectedLectureId === '0') {
       setAlertNoteVisible(true);
       setTimeout(() => {
         setAlertNoteVisible(false);
@@ -193,7 +194,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     } else {
       const reponse = await apiCaller.putPresent(Number(selectedLectureId));
       if (reponse.code === 1000) {
-        setSelectedLectureId("");
+        setSelectedLectureId('');
       }
     }
   };
@@ -216,7 +217,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       {alertSuccessVisible && <CustomAlert successMsg="수정이 완료되었습니다." />}
       <CloseBtn className="close" onClick={() => setVisible(false)}>
         <IconButton color="inherit">
-          <CloseIcon sx={{ fontSize: 30, color: "white" }} />
+          <CloseIcon sx={{ fontSize: 30, color: 'white' }} />
         </IconButton>
       </CloseBtn>
       <TabsUnstyled defaultValue={0}>
@@ -235,9 +236,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
             lectureId={lectureId}
             isLectureDataOK={isLectureDataOK}
             filteredLecture={filteredLecture}
-            startDate={startDate}
             setStartDate={setStartDate}
-            endDate={endDate}
             setEndtDate={setEndtDate}
             childrenRefreshAuto={childrenRefreshAuto}
             setSelectedLectureId={setSelectedLectureId}
@@ -268,7 +267,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
             variant="contained"
             color="error"
             endIcon={<DoneOutlineIcon />}
-            sx={{ width: 90, marginLeft: 2, fontSize: 12, height: 35, fontWeight: "bold" }}
+            sx={{ width: 90, marginLeft: 2, fontSize: 12, height: 35, fontWeight: 'bold' }}
             onClick={isClickJoinBtn}
           >
             참여
@@ -282,7 +281,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
 export default App;
 
 const AppContainer = styled.div<{ visible: boolean }>`
-  display: ${(props) => (props.visible === true ? "flex" : "none")};
+  display: ${(props) => (props.visible === true ? 'flex' : 'none')};
   position: relative;
   max-width: 790px;
   height: 600px;
