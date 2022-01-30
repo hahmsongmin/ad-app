@@ -1,30 +1,29 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import {
   DataGrid,
-  GridCellParams,
   GridRenderCellParams,
-  GridRowId,
-  GridRowParams,
-  MuiBaseEvent,
+  GridEditCellPropsParams,
+  GridCellEditCommitParams,
+  GridCellParams,
   MuiEvent,
-} from "@mui/x-data-grid";
-import { styled } from "@mui/material/styles";
-import { DataListBox, FormControlStyle, GRID_DEFAULT_LOCALE_TEXT, InputLabelStyle, SelectStyle } from "../config";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import CustomPagination from "../components/CustomPagination";
-import QuickSearchToolbar from "../components/QuickSearchToolbar";
-import TextField from "@mui/material/TextField";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
-import IMCLASS from "../service/api";
-import { LectureInquire } from "../types";
+} from '@mui/x-data-grid';
+import { styled } from '@mui/material/styles';
+import { DataListBox, FormControlStyle, GRID_DEFAULT_LOCALE_TEXT, InputLabelStyle, SelectStyle } from '../config';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import CustomPagination from '../components/CustomPagination';
+import QuickSearchToolbar from '../components/QuickSearchToolbar';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import IMCLASS from '../service/api';
+import { LectureInquire } from '../types';
 
 type AdminProps = {
   id: number;
@@ -44,13 +43,13 @@ function Admin({
   setAlertSuccessVisible,
 }: {
   apiCaller: IMCLASS;
-  adminData: LectureInquire["lectures"];
+  adminData: LectureInquire['lectures'];
   childrenRefreshAuto: () => void;
   setAlertErrorVisible: React.Dispatch<boolean>;
   setAlertSuccessVisible: React.Dispatch<boolean>;
 }) {
   const [addVisible, setAddVisible] = useState(false);
-  const [howManyData, setHowManyData] = useState<string>("");
+  const [howManyData, setHowManyData] = useState<string>('');
   const [adminData, setAdminData] = useState<AdminProps[]>([]);
   const classNameRef: React.RefObject<HTMLInputElement> = useRef(null);
   const startTimeRef: React.RefObject<HTMLInputElement> = useRef(null);
@@ -104,10 +103,6 @@ function Admin({
     [apiCaller, setAlertErrorVisible, setAlertSuccessVisible]
   );
 
-  const handleClickEditCell = useCallback((params: GridCellParams) => {
-    // console.log(params);
-  }, []);
-
   const clickSaveBtn = async () => {
     const lectureName = classNameRef.current?.value;
     const startTime = startTimeRef.current?.value;
@@ -115,15 +110,14 @@ function Admin({
     if (lectureName != null && startTime != null && endTime != null) {
       if (regTimeRef.test(startTime) && regTimeRef.test(endTime)) {
         const data = await apiCaller.putLecture(lectureName, startTime, endTime);
-        console.log(data);
         if (data.code === 1000) childrenRefreshAuto();
         setAddVisible(false);
       } else {
-        if (lectureName === "") {
+        if (lectureName === '') {
           classNameRef.current?.focus();
-        } else if (startTime === "" || !regTimeRef.test(startTime)) {
+        } else if (startTime === '' || !regTimeRef.test(startTime)) {
           startTimeRef.current?.focus();
-        } else if (endTime === "" || !regTimeRef.test(endTime)) {
+        } else if (endTime === '' || !regTimeRef.test(endTime)) {
           endTimeRef.current?.focus();
         }
       }
@@ -213,21 +207,21 @@ function Admin({
   };
 
   const AddDeleteBtn = styled(Box)({
-    position: "absolute",
-    color: "white",
+    position: 'absolute',
+    color: 'white',
     top: 165,
     right: 75,
   });
 
-  const handleKeyDownRow = (params: GridCellParams, event: MuiEvent<React.KeyboardEvent>) => {
-    if (event.code === "Enter") {
-      event.preventDefault();
-      return;
-    }
-  };
-
-  const editRowCommit = (editRowsModel: GridRowId, event: MuiEvent<MuiBaseEvent>) => {
-    console.log(editRowsModel, event);
+  const handleEditCell = (params: GridEditCellPropsParams) => {
+    const array = adminData.map((curr) => {
+      if (curr.id === params.id) {
+        return { ...curr, [params.field]: params.props.value };
+      } else {
+        return { ...curr };
+      }
+    });
+    setAdminData(array);
   };
 
   return (
@@ -245,27 +239,38 @@ function Admin({
         </FormControl>
         <DataGrid
           rows={adminData}
+          onCellKeyDown={(params: GridCellParams, event: MuiEvent<React.KeyboardEvent>) => {
+            if (event.key === 'Enter') {
+              setTimeout(() => {
+                document.querySelector('h1')?.click();
+              }, 500);
+              event.stopPropagation(); // Bubbling => capturing
+            }
+          }}
+          onEditCellPropsChange={handleEditCell}
           pageSize={howManyData ? Number(howManyData) : 15}
           rowsPerPageOptions={[]}
           checkboxSelection
           onSelectionModelChange={(item) => {
-            const selectedIDs = new Set(item);
-            selectedIdForDelete(selectedIDs);
+            if (item.length > 0) {
+              const selectedIDs = new Set(item);
+              selectedIdForDelete(selectedIDs);
+            }
           }}
           pagination
           columns={[
-            { field: "NO", type: "number", width: 100 },
+            { field: 'NO', type: 'number', width: 100 },
             {
-              field: "시간설정",
-              type: "string",
+              field: '시간설정',
+              type: 'string',
               width: 200,
               editable: true,
             },
-            { field: "시작시간", type: "string", width: 140, editable: true },
-            { field: "종료시간", type: "string", width: 140, editable: true },
+            { field: '시작시간', type: 'string', width: 140, editable: true },
+            { field: '종료시간', type: 'string', width: 140, editable: true },
             {
-              field: "actions",
-              type: "actions",
+              field: 'actions',
+              type: 'actions',
               width: 155,
               renderCell: (params: GridRenderCellParams) => {
                 const onClickModification = () => {
@@ -287,17 +292,11 @@ function Admin({
             },
           ]}
           ref={apiRef}
-          onCellClick={handleClickEditCell}
-          onCellKeyDown={handleKeyDownRow}
           editMode="row"
           components={{
             Toolbar: QuickSearchToolbar,
             Pagination: CustomPagination,
           }}
-          onRowEditCommit={editRowCommit}
-          onRowEditStart={(params: GridRowParams, event: MuiEvent<React.KeyboardEvent | React.MouseEvent>) =>
-            console.log(params, event)
-          }
           localeText={GRID_DEFAULT_LOCALE_TEXT}
         />
       </Box>

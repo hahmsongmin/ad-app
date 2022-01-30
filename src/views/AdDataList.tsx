@@ -61,29 +61,30 @@ function AdDataList({
   const [howManyData, setHowManyData] = useState<string>('');
   const [selectLectureName, setSelectLectureName] = useState<string>('');
   const [calendarDateVisible, setCalendarDateVisible] = useState<boolean>(false);
-  const selectedLectureRef = useRef<string>('');
 
   const handleEditRowsChange = useCallback(
     (changedProps: GridEditRowsModel) => {
-      const [presentId] = Object.keys(changedProps);
-      const tempObj = changedProps[String(presentId)];
-      if (tempObj != null) {
-        const changedValue = tempObj['출결'].value;
-        if (PRESENT.currentValue !== changedValue && changedValue != null) {
-          let present = '';
-          switch (changedValue) {
-            case '출석':
-              present = 'present';
-              break;
-            case '미출석':
-              present = 'absent';
-              break;
-            default:
-              present = 'absent';
-              break;
+      if (changedProps != null) {
+        const [presentId] = Object.keys(changedProps);
+        const tempObj = changedProps[String(presentId)];
+        if (tempObj != null) {
+          const changedValue = tempObj['출결'].value;
+          if (PRESENT.currentValue !== changedValue && changedValue != null) {
+            let present = '';
+            switch (changedValue) {
+              case '출석':
+                present = 'present';
+                break;
+              case '미출석':
+                present = 'absent';
+                break;
+              default:
+                present = 'absent';
+                break;
+            }
+            apiCaller.postPresent(Number(presentId), present as string);
+            PRESENT.currentValue = '';
           }
-          apiCaller.postPresent(Number(presentId), present as string);
-          PRESENT.currentValue = '';
         }
       }
     },
@@ -102,11 +103,11 @@ function AdDataList({
 
   const selectOnchange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectLectureName(event.target.value);
-    const selectedLectureId: string = (selectedLectureRef.current = Object.values(
-      event.target?.selectedOptions
-    )[0]?.id);
-    setSelectedLectureId(selectedLectureId);
-    adDataInfo(selectedLectureId);
+    if (event.target?.selectedOptions != null && event.target?.selectedOptions.length > 0) {
+      const selectedLectureId: string = Object.values(event.target?.selectedOptions)[0]?.id;
+      setSelectedLectureId(selectedLectureId);
+      adDataInfo(selectedLectureId);
+    }
   };
 
   const transferDate = (presentDate: string): string => {
@@ -145,8 +146,6 @@ function AdDataList({
 
   useEffect(() => {
     if (isLectureDataOK) {
-      selectedLectureRef.current = lectureId[0];
-      setSelectLectureName(concatData[String(selectedLectureRef.current)]?.lectureName);
       adDataInfo(String(concatData[lectureId[0]]?.lectureId));
     }
   }, [adDataInfo, concatData, isLectureDataOK, lectureId]);
@@ -155,11 +154,8 @@ function AdDataList({
     return (
       <LectureSelectBox>
         <FormControl fullWidth>
-          {selectedLectureRef.current && (
+          {isLectureDataOK && (
             <NativeSelect onChange={selectOnchange} value={selectLectureName}>
-              <option value="참여시간설정" id="0">
-                참여시간설정
-              </option>
               {lectureId.sort().map((id) => (
                 <option key={id} id={id} value={filteredLecture[id]?.lectureName}>
                   {filteredLecture[id]?.lectureName}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import LogDataList from './views/LogDataList';
 import './views/DataList.css';
@@ -18,7 +18,7 @@ import Admin from './views/Admin';
 import { GRID_DEFAULT_LOCALE_TEXT } from './config';
 import CustomAlert from './components/CustomAlert';
 import IMCLASS from './service/api';
-import { LogTest } from './TestData';
+import { AdTest, AdTest1, LogTest } from './TestData';
 
 function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const [logDataInfo, setLogDataInfo] = useState<LogInfo[]>([]);
@@ -116,18 +116,21 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           },
         };
       });
-      setFilteredLecture(filterResults);
+      setFilteredLecture({ '0': { lectureName: '참여시간설정' }, ...filterResults });
     };
 
     const getInitHandler = async () => {
       console.log('✅ 데이터 조회');
       try {
-        const adResults: AdInquire['results'] = await apiCaller.getAdInquire();
-        const lectureResults: LectureInquire['lectures'] | undefined = await apiCaller.getLectureInquire();
+        // const adResults: AdInquire['results'] = await apiCaller.getAdInquire();
+        // const lectureResults: LectureInquire['lectures'] | undefined = await apiCaller.getLectureInquire();
 
+        // TEST
         transferLogDataInfo(LogTest.results); //  adResults 출석로그 출력
+        const lectureResults: LectureInquire['lectures'] = AdTest.lectures;
+        //
 
-        if (lectureResults != null) {
+        if (lectureResults != null && lectureResults.length > 0) {
           let _startDate = startDate;
           let _endDate = endDate;
           if (_startDate === '' && _endDate === '') {
@@ -139,16 +142,18 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
 
           setAdminData(lectureResults);
           setIsLectureDataOK(Object.keys(lectureResults).length > 0 ? true : false);
-          setLectureId(lectureResults.map((lecture) => String(lecture.lectureId)));
+          const newLectureId = lectureResults.map((lecture) => String(lecture.lectureId));
+          setLectureId(['0', ...newLectureId]);
           handleFilterLecture(lectureResults);
           // => 출결정보 추가 (유저가 ? ) 참가 ? 참여 ?
           if (LogTest.results.length > 0) {
             // adResults.length > 0
-            const concatResults: ConcatType | void = await apiCaller.getPresentInquire(
-              lectureResults,
-              _startDate,
-              _endDate
-            );
+            // const concatResults: ConcatType | void = await apiCaller.getPresentInquire(
+            //   lectureResults,
+            //   _startDate,
+            //   _endDate
+            // );
+            const concatResults = AdTest1;
             if (concatResults != null) {
               setConcatData(concatResults);
             }
@@ -304,7 +309,7 @@ const ReFresh = styled.div`
   display: flex;
   align-items: center;
   position: absolute;
-  bottom: 10px;
+  bottom: 15px;
   right: 60px;
 `;
 

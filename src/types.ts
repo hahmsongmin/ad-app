@@ -15,8 +15,8 @@ export type LogInfo = {
 export type LectureProps = {
   [T: string]: {
     lectureName: string;
-    startTime: string;
-    endTime: string;
+    startTime?: string;
+    endTime?: string;
   };
 };
 
