@@ -1,26 +1,30 @@
-import axios, { AxiosInstance } from 'axios';
-import { LogTest } from '../TestData';
-import { AdInquire, CommonCode, ConcatType, LectureInquire, PresentInquire, UserProps } from '../types';
+import axios, { AxiosInstance } from "axios";
+import qs from "qs";
+import { LogTest } from "../TestData";
+import { AdInquire, CommonCode, ConcatType, LectureInquire, PresentInquire, UserProps } from "../types";
 
 interface IApiProvider {
   setSpaceAndMemberId(spaceId: number, memberId: number): void;
   //
-  getAdInquire(): Promise<AdInquire['results']>;
+  getAdInquire(): Promise<AdInquire["results"]>;
   //
   getPresentInquire(
-    lectureResults: LectureInquire['lectures'],
+    lectureResults: LectureInquire["lectures"],
     startDate: string,
     endDate: string
   ): Promise<ConcatType | void>;
   postPresent(presentId: number, present: string): void;
   putPresent(lectureId: number): Promise<CommonCode>;
   //
-  getLectureInquire(): Promise<LectureInquire['lectures'] | undefined>;
-  postLecture(lectureId: number, lectureName: string, startTime: string, endTime: string): void;
+  getLectureInquire(): Promise<LectureInquire["lectures"] | undefined>;
+  postLecture(lectureId: number, lectureName: string, startTime: string, endTime: string): Promise<CommonCode>;
   putLecture(lectureName: string, startTime: string, endTime: string): Promise<CommonCode>;
   deleteLecture(lectureId: number): void;
 }
 
+axios.defaults.paramsSerializer = (params) => {
+  return qs.stringify(params);
+};
 class ApiCallers implements IApiProvider {
   private apiBase: AxiosInstance;
   private _spaceId: number = 0;
@@ -28,15 +32,16 @@ class ApiCallers implements IApiProvider {
   private nickNameObject: UserProps = {};
   private constructor() {
     this.apiBase = axios.create({
-      baseURL: 'https://admin.meetpage.io',
+      baseURL: "https://admin.meetpage.io",
       withCredentials: true,
+      headers: {},
     });
   }
   private getNickName(memberId: number): string {
     if (this.nickNameObject[String(memberId)]) {
       return this.nickNameObject[String(memberId)].memberName;
     }
-    return '';
+    return "";
   }
   static makeApi(): ApiCallers {
     return new ApiCallers();
@@ -47,21 +52,21 @@ class ApiCallers implements IApiProvider {
     this._memberId = memberId;
   }
 
-  getAdInquire = async (): Promise<AdInquire['results']> => {
+  getAdInquire = async (): Promise<AdInquire["results"]> => {
     try {
       const { data }: { data: AdInquire } = await this.apiBase.get(`/attend/${this._spaceId}`);
-      LogTest.results.forEach((user) => {
+      data.results.forEach((user) => {
         const keyName = user.memberId.toString();
         this.nickNameObject[keyName] = { memberId: user.memberId, memberName: user.memberName };
       });
       return data.results;
     } catch (e) {
-      throw new Error('getAdInquire Faild');
+      throw new Error("getAdInquire Faild");
     }
   };
 
   getPresentInquire = async (
-    lectureResults: LectureInquire['lectures'],
+    lectureResults: LectureInquire["lectures"],
     startDate: string,
     endDate: string
   ): Promise<ConcatType | void> => {
@@ -71,7 +76,7 @@ class ApiCallers implements IApiProvider {
         lectureResults.map(async (info) => {
           const {
             data: { presents },
-          }: { data: { presents: PresentInquire['presents'] } } = await this.apiBase.get(`/present/${info.lectureId}`, {
+          }: { data: { presents: PresentInquire["presents"] } } = await this.apiBase.get(`/present/${info.lectureId}`, {
             params: {
               startDate,
               endDate,
@@ -95,56 +100,58 @@ class ApiCallers implements IApiProvider {
           };
         })
       );
-      if (ok.some((all) => all.status === 'fulfilled')) {
+      if (ok.some((all) => all.status === "fulfilled")) {
         return adInfoConcat;
       }
     } catch (e) {
-      throw new Error('getPresentInquire Faild');
+      throw new Error("getPresentInquire Faild");
     }
   };
 
   postPresent = async (presentId: number, present: string) => {
-    await this.apiBase.post(`/present/${presentId}`, { params: { presentId, present } });
+    await this.apiBase.post(`/present/${presentId}`, qs.stringify({ present }));
   };
 
   putPresent = async (lectureId: number): Promise<CommonCode> => {
     const { data }: { data: CommonCode } = await this.apiBase.put(`/present/${lectureId}`, {
-      params: { memberId: this._memberId, present: 'absent' },
+      params: {
+        memberId: this._memberId,
+        present: "absent",
+      },
     });
+    console.log(data);
     return data;
   };
 
-  getLectureInquire = async (): Promise<LectureInquire['lectures'] | undefined> => {
+  getLectureInquire = async (): Promise<LectureInquire["lectures"] | undefined> => {
     try {
       const { data }: { data: LectureInquire } = await this.apiBase.get(`/lecture/${this._spaceId}`);
       if (data.lectures != null) {
         return data.lectures;
       }
     } catch (e) {
-      throw new Error('getLectureInquire Faild');
+      throw new Error("getLectureInquire Faild");
     }
   };
 
   putLecture = async (lectureName: string, startTime: string, endTime: string): Promise<CommonCode> => {
-    const { data }: { data: CommonCode } = await this.apiBase.put(`/lecture/${this._spaceId}`, {
-      params: {
-        lectureName,
-        startTime,
-        endTime,
-      },
-    });
+    const params = { lectureName, startTime, endTime };
+    console.log(lectureName, startTime, endTime);
+    console.log(qs.stringify(params));
+    const { data }: { data: CommonCode } = await this.apiBase.put(`/lecture/${this._spaceId}`, qs.stringify(params));
+    console.log(data);
     return data;
   };
 
-  postLecture = async (lectureId: number, lectureName: string, startTime: string, endTime: string) => {
-    const { data }: { data: CommonCode } = await this.apiBase.post(`/lecture/${lectureId}`, {
-      params: {
-        lectureName,
-        startTime,
-        endTime,
-      },
-    });
-    console.log(data);
+  postLecture = async (
+    lectureId: number,
+    lectureName: string,
+    startTime: string,
+    endTime: string
+  ): Promise<CommonCode> => {
+    const params = { lectureName, startTime, endTime };
+    const { data }: { data: CommonCode } = await this.apiBase.post(`/lecture/${lectureId}`, qs.stringify(params));
+    return data;
   };
 
   deleteLecture = async (lectureId: number) => {
