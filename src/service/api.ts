@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import qs from "qs";
-import { LogTest } from "../TestData";
 import { AdInquire, CommonCode, ConcatType, LectureInquire, PresentInquire, UserProps } from "../types";
 
 interface IApiProvider {
@@ -15,6 +14,7 @@ interface IApiProvider {
   ): Promise<ConcatType | void>;
   postPresent(presentId: number, present: string): void;
   putPresent(lectureId: number): Promise<CommonCode>;
+  deletePresent(presentId: number): void;
   //
   getLectureInquire(): Promise<LectureInquire["lectures"] | undefined>;
   postLecture(lectureId: number, lectureName: string, startTime: string, endTime: string): Promise<CommonCode>;
@@ -34,7 +34,6 @@ class ApiCallers implements IApiProvider {
     this.apiBase = axios.create({
       baseURL: "https://admin.meetpage.io",
       withCredentials: true,
-      headers: {},
     });
   }
   private getNickName(memberId: number): string {
@@ -61,6 +60,7 @@ class ApiCallers implements IApiProvider {
       });
       return data.results;
     } catch (e) {
+      console.error(e);
       throw new Error("getAdInquire Faild");
     }
   };
@@ -104,23 +104,38 @@ class ApiCallers implements IApiProvider {
         return adInfoConcat;
       }
     } catch (e) {
+      console.error(e);
       throw new Error("getPresentInquire Faild");
     }
   };
 
   postPresent = async (presentId: number, present: string) => {
-    await this.apiBase.post(`/present/${presentId}`, qs.stringify({ present }));
+    try {
+      await this.apiBase.post(`/present/${presentId}`, qs.stringify({ present }));
+    } catch (e) {
+      console.error(e);
+      throw new Error("postPresent Faild");
+    }
   };
 
   putPresent = async (lectureId: number): Promise<CommonCode> => {
-    const { data }: { data: CommonCode } = await this.apiBase.put(`/present/${lectureId}`, {
-      params: {
-        memberId: this._memberId,
-        present: "absent",
-      },
-    });
-    console.log(data);
-    return data;
+    try {
+      const params = { _method: "put", lectureId, memberId: this._memberId, present: "absent" };
+      const response = await this.apiBase.post(`/present/${lectureId}`, qs.stringify(params));
+      return response.data;
+    } catch (e) {
+      console.error(e);
+      throw new Error("putPresent Faild");
+    }
+  };
+
+  deletePresent = async (presentId: number) => {
+    try {
+      await this.apiBase.delete(`/present/${presentId}`);
+    } catch (e) {
+      console.error(e);
+      throw new Error("deletePresent Faild");
+    }
   };
 
   getLectureInquire = async (): Promise<LectureInquire["lectures"] | undefined> => {
@@ -130,17 +145,20 @@ class ApiCallers implements IApiProvider {
         return data.lectures;
       }
     } catch (e) {
+      console.error(e);
       throw new Error("getLectureInquire Faild");
     }
   };
 
   putLecture = async (lectureName: string, startTime: string, endTime: string): Promise<CommonCode> => {
-    const params = { lectureName, startTime, endTime };
-    console.log(lectureName, startTime, endTime);
-    console.log(qs.stringify(params));
-    const { data }: { data: CommonCode } = await this.apiBase.put(`/lecture/${this._spaceId}`, qs.stringify(params));
-    console.log(data);
-    return data;
+    try {
+      const params = { _method: "put", spaceId: this._spaceId, lectureName, startTime, endTime };
+      const { data }: { data: CommonCode } = await this.apiBase.post(`/lecture/${this._spaceId}`, qs.stringify(params));
+      return data;
+    } catch (e) {
+      console.error(e);
+      throw new Error("putLecture Faild");
+    }
   };
 
   postLecture = async (
@@ -149,13 +167,23 @@ class ApiCallers implements IApiProvider {
     startTime: string,
     endTime: string
   ): Promise<CommonCode> => {
-    const params = { lectureName, startTime, endTime };
-    const { data }: { data: CommonCode } = await this.apiBase.post(`/lecture/${lectureId}`, qs.stringify(params));
-    return data;
+    try {
+      const params = { lectureName, startTime, endTime };
+      const { data }: { data: CommonCode } = await this.apiBase.post(`/lecture/${lectureId}`, qs.stringify(params));
+      return data;
+    } catch (e) {
+      console.error(e);
+      throw new Error("postLecture Faild");
+    }
   };
 
   deleteLecture = async (lectureId: number) => {
-    await this.apiBase.delete(`/lecture/${lectureId}`);
+    try {
+      await this.apiBase.delete(`/lecture/${lectureId}`);
+    } catch (e) {
+      console.error(e);
+      throw new Error("deleteLecture Faild");
+    }
   };
 }
 

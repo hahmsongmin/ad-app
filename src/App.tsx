@@ -19,7 +19,6 @@ import Admin from "./views/Admin";
 import { GRID_DEFAULT_LOCALE_TEXT } from "./config";
 import CustomAlert from "./components/CustomAlert";
 import IMCLASS from "./service/api";
-import { AdTest, AdTest1, LogTest } from "./TestData";
 
 function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const [logDataInfo, setLogDataInfo] = useState<LogInfo[]>([]);
@@ -123,18 +122,11 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     };
 
     const getInitHandler = async () => {
-      console.log("✅ 데이터 조회", selectedLectureId);
+      console.log("✅ 데이터 조회");
       try {
-        // Original
         const adResults: AdInquire["results"] = await apiCaller.getAdInquire();
         const lectureResults: LectureInquire["lectures"] | undefined = await apiCaller.getLectureInquire();
-        transferLogDataInfo(adResults); //  adResults 출석로그 출력
-
-        // TEST
-        // transferLogDataInfo(LogTest.results); //  adResults 출석로그 출력
-        // const lectureResults: LectureInquire["lectures"] = AdTest.lectures;
-        //
-
+        transferLogDataInfo(adResults);
         if (lectureResults != null && lectureResults.length > 0) {
           let _startDate = startDate;
           let _endDate = endDate;
@@ -144,20 +136,17 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           } else if (_endDate === "") {
             _endDate = _startDate;
           }
-
           setAdminData(lectureResults);
           setIsLectureDataOK(Object.keys(lectureResults).length > 0 ? true : false);
           const newLectureId = lectureResults.map((lecture) => String(lecture.lectureId));
           setLectureId(["0", ...newLectureId]);
           handleFilterLecture(lectureResults);
-          if (LogTest.results.length > 0) {
+          if (adResults.length > 0) {
             const concatResults: ConcatType | void = await apiCaller.getPresentInquire(
               lectureResults,
               _startDate,
               _endDate
             );
-            // TEST
-            // const concatResults = AdTest1;
             if (concatResults != null) {
               setConcatData(concatResults);
             }
@@ -174,21 +163,19 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       setRefresh((curr: boolean) => !curr);
     }
 
-    // 스페이스 진입 => 클라(memberId, spaceId 로 api 출석 추가)
-    // 스페이스 나갈시 => 클라(memberId, spaceId 로 api 퇴실 추가)
-    // 출석부 클릭 시 spaceId로 api 출석 조회 화면에 출력
-
     // 이벤트 (클라-출석부) =>
-    emitter.on(
-      "isAdClick",
-      ({ isAdmin, spaceId, memberId }: { isAdmin: boolean; spaceId: number; memberId: number }) => {
-        spaceIdRef.current = spaceId;
-        setIsAdmin(isAdmin);
-        setUerType(isAdmin ? "Admin" : "User");
-        apiCaller.setSpaceAndMemberId(spaceId, memberId); // ⭐(spaceId, memberId 넘겨주세요)
-        getInitHandler();
-      }
-    );
+    const eventHandler = ({ isAdmin, spaceId, memberId }: { isAdmin: boolean; spaceId: number; memberId: number }) => {
+      spaceIdRef.current = spaceId;
+      setIsAdmin(isAdmin); // 관리자 입니까 ?
+      setUerType(isAdmin ? "Admin" : "User"); // 관리자 입니까 ?
+      apiCaller.setSpaceAndMemberId(spaceId, memberId); // ⭐(spaceId, memberId 넘겨주세요)
+      getInitHandler();
+    };
+    emitter.on("isAdClick", eventHandler);
+
+    return () => {
+      emitter.removeAllListeners("isAdClick");
+    };
   }, [apiCaller, refresh, concatData, startDate, endDate]);
 
   const childrenRefreshAuto = () => {
@@ -233,9 +220,32 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       </CloseBtn>
       <TabsUnstyled defaultValue={0}>
         <TabsList usertype={userType}>
-          <Tab onClick={() => tabClickCheck(false, false)}>출석 로그</Tab>
-          <Tab onClick={() => tabClickCheck(false, true)}>출석부</Tab>
-          {isAdmin && <Tab onClick={() => tabClickCheck(true, false)}>시간 설정</Tab>}
+          <Tab
+            onClick={() => {
+              childrenRefreshAuto();
+              tabClickCheck(false, false);
+            }}
+          >
+            출석 로그
+          </Tab>
+          <Tab
+            onClick={() => {
+              childrenRefreshAuto();
+              tabClickCheck(false, true);
+            }}
+          >
+            출석부
+          </Tab>
+          {isAdmin && (
+            <Tab
+              onClick={() => {
+                childrenRefreshAuto();
+                tabClickCheck(true, false);
+              }}
+            >
+              시간 설정
+            </Tab>
+          )}
         </TabsList>
         <TabPanel value={0}>
           <LogDataList logDataInfo={logDataInfo} />
@@ -246,6 +256,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
             isAdmin={isAdmin}
             concatData={concatData}
             lectureId={lectureId}
+            adJoinBtnVisible={adJoinBtnVisible}
             isLectureDataOK={isLectureDataOK}
             filteredLecture={filteredLecture}
             setStartDate={setStartDate}
@@ -270,7 +281,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           variant="contained"
           endIcon={<RefreshIcon />}
           color="inherit"
-          sx={{ width: 110, fontSize: 12, height: 30 }}
+          sx={{ width: 110, fontSize: 12, height: 35, fontWeight: "bold" }}
         >
           새로고침
         </Button>

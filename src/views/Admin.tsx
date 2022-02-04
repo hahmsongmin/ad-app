@@ -10,6 +10,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import CustomPagination from "../components/CustomPagination";
 import QuickSearchToolbar from "../components/QuickSearchToolbar";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Modal from "@mui/material/Modal";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -44,10 +46,12 @@ function Admin({
   const [addVisible, setAddVisible] = useState(false);
   const [howManyData, setHowManyData] = useState<string>("");
   const [adminData, setAdminData] = useState<AdminProps[]>([]);
+  const [isDelModalVisible, setIsDelModalVisible] = useState<boolean>(false);
   const classNameRef: React.RefObject<HTMLInputElement> = useRef(null);
   const startTimeRef: React.RefObject<HTMLInputElement> = useRef(null);
   const endTimeRef: React.RefObject<HTMLInputElement> = useRef(null);
-  let deleteRef = Array<number | string>();
+  let row = 0;
+  let deleteRef = useRef(Array.from({ length: row }));
 
   useEffect(() => {
     const data = _adminData.map((info, index) => {
@@ -120,7 +124,7 @@ function Admin({
 
   const selectedIdForDelete = (selectedId: Set<number | string>) => {
     const arr: Array<number | string> = Array.from(selectedId.values());
-    deleteRef = [...arr];
+    deleteRef.current = [...arr];
   };
 
   const AddTextFields = () => {
@@ -170,30 +174,73 @@ function Admin({
       </Dialog>
     );
   };
-  const BtnAddDeleteGroup = () => {
-    const deleteHandleClick = useCallback(() => {
-      const newAdminData = [...adminData];
-      if (deleteRef.length === 0) return;
-      deleteRef.forEach((id) => {
-        newAdminData.forEach((info, index) => {
-          if (id === info.id) {
-            newAdminData.splice(index, 1);
-            apiCaller.deleteLecture(info.id);
-          }
-        });
+
+  const deleteHandleClick = useCallback(() => {
+    if (deleteRef.current.length === 0) return;
+    const newAdminData = [...adminData];
+    deleteRef.current.forEach((id) => {
+      newAdminData.forEach((info, index) => {
+        if (id === info.id) {
+          newAdminData.splice(index, 1);
+          apiCaller.deleteLecture(info.id);
+        }
       });
-      setTimeout(() => {
-        setAdminData(newAdminData);
-        childrenRefreshAuto();
-      }, 0);
-      deleteRef = [];
-    }, []);
+    });
+    setTimeout(() => {
+      setAdminData(newAdminData);
+    }, 0);
+    deleteRef.current = [];
+  }, []);
+
+  const style = {
+    position: "absolute" as "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 400,
+    bgcolor: "background.paper",
+    borderRadius: 5,
+    border: "3px solid #00a29a",
+    boxShadow: 24,
+    p: 4,
+  };
+
+  const DeleteInfoModal = () => {
+    return (
+      <div>
+        <Modal
+          open={isDelModalVisible}
+          onClose={() => setIsDelModalVisible(false)}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
+        >
+          <Box sx={style}>
+            <Typography id="modal-modal-title" variant="h6" component="h2">
+              정말로 삭제하시겠습니까?
+            </Typography>
+            <Box sx={{ textAlign: "end" }}>
+              <Button>예</Button>
+              <Button>아니오</Button>
+            </Box>
+          </Box>
+        </Modal>
+      </div>
+    );
+  };
+
+  const BtnAddDeleteGroup = () => {
     return (
       <AddDeleteBtn>
         <Button color="inherit" startIcon={<AddIcon />} onClick={handleClickOpen}>
           추가
         </Button>
-        <Button color="inherit" startIcon={<DeleteIcon />} onClick={deleteHandleClick}>
+        <Button
+          color="inherit"
+          startIcon={<DeleteIcon />}
+          onClick={() => {
+            deleteRef.current.length > 0 && setIsDelModalVisible(true);
+          }}
+        >
           삭제
         </Button>
       </AddDeleteBtn>
@@ -221,6 +268,7 @@ function Admin({
   return (
     <>
       <Box sx={DataListBox}>
+        {isDelModalVisible && <DeleteInfoModal />}
         <FormControl sx={{ ...FormControlStyle, left: 0 }}>
           <InputLabel id="demo-simple-select-disabled-label" sx={InputLabelStyle}>
             모아보기
@@ -246,10 +294,9 @@ function Admin({
           rowsPerPageOptions={[]}
           checkboxSelection
           onSelectionModelChange={(item) => {
-            if (item.length > 0) {
-              const selectedIDs = new Set(item);
-              selectedIdForDelete(selectedIDs);
-            }
+            const selectedIDs = new Set(item);
+            row = item.length;
+            selectedIdForDelete(selectedIDs);
           }}
           pagination
           columns={[
