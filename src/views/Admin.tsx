@@ -204,7 +204,7 @@ function Admin({
     width: 400,
     bgcolor: "background.paper",
     borderRadius: 5,
-    border: "3px solid #00a29a",
+    border: "2px solid #00a29a",
     boxShadow: 24,
     p: 4,
   };
@@ -217,6 +217,7 @@ function Admin({
           onClose={() => setIsDelModalVisible(false)}
           aria-labelledby="modal-modal-title"
           aria-describedby="modal-modal-description"
+          hideBackdrop={false} // backBg => hidden : true
         >
           <Box sx={style}>
             <Typography id="modal-modal-title" variant="h6" component="h2">

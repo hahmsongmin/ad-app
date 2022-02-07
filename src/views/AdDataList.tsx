@@ -241,7 +241,7 @@ const AdDataList = memo(
           <ButtonGroup>
             <SearchBtn onClick={clickSearchBtn} isdateselect={isDateSelect ? "true" : "false"}>
               {isDateSelect ? `${startDate.slice(2)} ~ ${endDate.slice(2)}` : "날짜 검색"}
-              <CalendarTodayIcon fontSize="small" sx={{ marginLeft: 0.5, marginBottom: 0.3 }} />
+              {isDateSelect && <CalendarTodayIcon fontSize="small" sx={{ marginLeft: 0.5, marginBottom: 0.3 }} />}
             </SearchBtn>
           </ButtonGroup>
           <FormControl sx={FormControlStyle}>
@@ -340,7 +340,7 @@ const SearchBtn = styled(Button)<{ isdateselect: string }>`
   background-color: inherit;
   border: 2px solid white;
   border-radius: 5;
-  width: ${(props) => (props.isdateselect === "true" ? "200px" : "120px")};
+  width: ${(props) => (props.isdateselect === "true" ? "215px" : "100px")};
   height: 43px;
   right: 65px;
   top: 60px;
