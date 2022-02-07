@@ -1,9 +1,10 @@
-import React, { Dispatch, useCallback, useEffect, memo, useState, useRef } from "react";
+import React, { useCallback, useEffect, memo, useState, useRef } from "react";
 import { DataGrid, GridEditRowsModel, GridRowParams } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import MenuItem from "@mui/material/MenuItem";
@@ -50,29 +51,38 @@ const AdDataList = memo(
     isLectureDataOK,
     filteredLecture,
     setStartDate,
-    setEndtDate,
+    setEndDate,
     childrenRefreshAuto,
     adJoinBtnVisible,
     setSelectedLectureId,
     apiCaller,
+    startDate,
+    endDate,
+    isDateSelect,
+    setIsDateSelect,
   }: {
     isAdmin: Boolean;
     concatData: ConcatType;
     lectureId: string[];
     isLectureDataOK: Boolean;
     filteredLecture: LectureProps;
-    setStartDate: Dispatch<string>;
-    setEndtDate: Dispatch<string>;
-    setSelectedLectureId: Dispatch<string>;
+    setStartDate: React.Dispatch<string>;
+    setEndDate: React.Dispatch<string>;
+    setSelectedLectureId: React.Dispatch<string>;
     adJoinBtnVisible: Boolean;
     apiCaller: IMCLASS;
     childrenRefreshAuto: () => void;
+    startDate: string;
+    endDate: string;
+    isDateSelect: boolean;
+    setIsDateSelect: React.Dispatch<boolean>;
   }) => {
     const [userAdData, setUserAdData] = useState<RowsProps[]>([]);
     const [howManyData, setHowManyData] = useState<string>("");
     const [selectLectureName, setSelectLectureName] = useState<string>("");
     const [calendarDateVisible, setCalendarDateVisible] = useState<boolean>(false);
     const [deleteBtnVisible, setDeleteBtnVisible] = useState<boolean>(false);
+
     let row = 0;
     let deleteRef = useRef(Array.from({ length: row }));
 
@@ -122,29 +132,49 @@ const AdDataList = memo(
         SELECT_LECTURE.lectureName = event.target.value;
         SELECT_LECTURE.lectureId = selectedLectureId;
         setSelectedLectureId(selectedLectureId);
-        adDataInfo(selectedLectureId);
+        apiCaller.setSelectedLectureId(Number(selectedLectureId));
+        adDataInfo(selectedLectureId, startDate, endDate);
       }
     };
 
+    const transferDateDesh = (presentDate: string): string => {
+      const date = presentDate.slice(2).replaceAll("-", ".");
+      return date;
+    };
+
+    const transferDateComma = (startEndDate: string): string => {
+      const date = startEndDate.replaceAll(".", "-");
+      return date;
+    };
+
     const adDataInfo = useCallback(
-      (lectureId: string) => {
-        const data = concatData[lectureId];
-        if (data?.person != null) {
-          const newData = data?.person?.map((info) => {
-            return {
-              id: info.presentId,
-              시간설정: data.lectureName,
-              닉네임: info.memberName,
-              날짜: transferDate(info.presentDate),
-              타입: info.isMember === "Y" ? "멤버" : "게스트",
-              출결: info.present === "absent" ? "미출석" : "출석",
-            };
-          });
-          setSelectLectureName(concatData[lectureId].lectureName);
-          setUserAdData(newData);
-        } else {
-          const emtpyArray: RowsProps[] = [];
-          setUserAdData(emtpyArray);
+      (lectureId: string, startDate: string, endDate: string) => {
+        if (startDate && endDate) {
+          const newData: RowsProps[] = [];
+          const startDateTemp: number = new Date(transferDateComma(startDate)).getTime();
+          const endDateTemp: number = new Date(transferDateComma(endDate)).getTime();
+          const data = concatData[lectureId];
+          if (data?.person != null) {
+            data?.person?.forEach((info) => {
+              const userDate: number = new Date(info.presentDate).getTime();
+              if (startDateTemp <= userDate && userDate <= endDateTemp) {
+                const user = {
+                  id: info.presentId,
+                  시간설정: data.lectureName,
+                  닉네임: info.memberName,
+                  날짜: transferDateDesh(info.presentDate),
+                  타입: info.isMember === "Y" ? "멤버" : "게스트",
+                  출결: info.present === "absent" ? "미출석" : "출석",
+                };
+                newData.push(user);
+              }
+            });
+            setSelectLectureName(concatData[lectureId].lectureName);
+            setUserAdData(newData);
+          } else {
+            const emtpyArray: RowsProps[] = [];
+            setUserAdData(emtpyArray);
+          }
         }
       },
       [concatData]
@@ -153,14 +183,9 @@ const AdDataList = memo(
     useEffect(() => {
       if (isLectureDataOK) {
         setSelectLectureName(SELECT_LECTURE.lectureName);
-        adDataInfo(SELECT_LECTURE.lectureId);
+        adDataInfo(SELECT_LECTURE.lectureId, startDate, endDate);
       }
-    }, [adDataInfo, concatData, isLectureDataOK, lectureId]);
-
-    const transferDate = (presentDate: string): string => {
-      const date = presentDate.slice(2).replaceAll("-", ".");
-      return date;
-    };
+    }, [adDataInfo, concatData, isLectureDataOK, lectureId, startDate, endDate]);
 
     const clickSearchBtn = () => {
       setCalendarDateVisible(true);
@@ -214,7 +239,10 @@ const AdDataList = memo(
       <>
         <Box sx={DataListBox}>
           <ButtonGroup>
-            <SearchBtn onClick={clickSearchBtn}>날짜 검색</SearchBtn>
+            <SearchBtn onClick={clickSearchBtn} isdateselect={isDateSelect ? "true" : "false"}>
+              {isDateSelect ? `${startDate.slice(2)} ~ ${endDate.slice(2)}` : "날짜 검색"}
+              <CalendarTodayIcon fontSize="small" sx={{ marginLeft: 0.5, marginBottom: 0.3 }} />
+            </SearchBtn>
           </ButtonGroup>
           <FormControl sx={FormControlStyle}>
             <InputLabel id="demo-simple-select-disabled-label" sx={InputLabelStyle}>
@@ -265,8 +293,9 @@ const AdDataList = memo(
             <SearchCalendar
               closeCalendarBtn={closeCalendarBtn}
               childrenRefreshAuto={childrenRefreshAuto}
+              setIsDateSelect={setIsDateSelect}
               setStartDate={setStartDate}
-              setEndtDate={setEndtDate}
+              setEndDate={setEndDate}
             />
           )}
         </Box>
@@ -303,13 +332,15 @@ const DeleteBtn = styled("div")`
   bottom: 15px;
 `;
 
-const SearchBtn = styled(Button)`
+const SearchBtn = styled(Button)<{ isdateselect: string }>`
+  display: flex;
+  align-items: center;
   color: white;
   position: absolute;
   background-color: inherit;
   border: 2px solid white;
   border-radius: 5;
-  width: 100px;
+  width: ${(props) => (props.isdateselect === "true" ? "200px" : "120px")};
   height: 43px;
   right: 65px;
   top: 60px;

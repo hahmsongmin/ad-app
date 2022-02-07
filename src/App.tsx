@@ -34,16 +34,25 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const [alertErrorVisible, setAlertErrorVisible] = useState<boolean>(false);
   const [alertNoteVisible, setAlertNoteVisible] = useState<boolean>(false);
   const [alertSuccessVisible, setAlertSuccessVisible] = useState<boolean>(false);
+  const [alertIsJoinVisible, setAlertIsJoinVisible] = useState<boolean>(false);
+  const [isDateSelect, setIsDateSelect] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndtDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<Boolean>(false);
   const [userType, setUerType] = useState<string>("");
 
   const spaceIdRef = useRef<number>(0);
 
   useEffect(() => {
-    const commonDt = (Dt: string): string => {
-      return new Date(new Date(Dt).getTime() + 540 * 60 * 1000).toLocaleString("ko-KR");
+    const commonDt = (Dt: string, leaveDt = false): string => {
+      const tempDt = Dt.split(" ").filter((item) => item !== "");
+      let firstTime: number = 0;
+      if (leaveDt) {
+        firstTime = new Date(tempDt.join(" ")).getTime() + 900 * 60 * 1000;
+      } else {
+        firstTime = new Date(tempDt.join(" ")).getTime() + 540 * 60 * 1000;
+      }
+      return new Date(firstTime).toLocaleString();
     };
 
     const transferDate = (_enterDt: string): string => {
@@ -65,7 +74,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       if (_leaveDt === "") {
         leaveDt = _leaveDt;
       } else {
-        const dtTemp = commonDt(_leaveDt).split(" ")[commonDt(_leaveDt).split(" ").length - 1].split(":");
+        const dtTemp = commonDt(_leaveDt, true).split(" ")[commonDt(_leaveDt).split(" ").length - 1].split(":");
         leaveDt = [String(dtTemp[0]).padStart(2, "0"), String(dtTemp[1]).padStart(2, "0")].join(":");
       }
       return [enterDt, leaveDt];
@@ -86,7 +95,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           memberName: info.memberName,
           date: transferDate(info.enterDt),
           enterDt: transferTime(info.enterDt)[0],
-          leaveDt: info.leaveDt === null ? "" : transferTime(info.enterDt, info.leaveDt)[1],
+          leaveDt: info.leaveDt == null ? "" : transferTime(info.enterDt, info.leaveDt)[1],
           memberType: info.isMember ?? "",
         };
         infoArray.push(logData);
@@ -132,9 +141,11 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           let _endDate = endDate;
           if (_startDate === "" && _endDate === "") {
             _startDate = getTodate();
+            setStartDate(_startDate);
             _endDate = getTodate();
           } else if (_endDate === "") {
             _endDate = _startDate;
+            setEndDate(_endDate);
           }
           setAdminData(lectureResults);
           setIsLectureDataOK(Object.keys(lectureResults).length > 0 ? true : false);
@@ -151,6 +162,8 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
               setConcatData(concatResults);
             }
           }
+        } else {
+          setAdminData([]);
         }
       } catch {
       } finally {
@@ -160,6 +173,9 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
 
     if (refresh) {
       getInitHandler();
+      if (isDateSelect) {
+        setIsDateSelect(isDateSelect);
+      }
       setRefresh((curr: boolean) => !curr);
     }
 
@@ -176,23 +192,33 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     return () => {
       emitter.removeAllListeners("isAdClick");
     };
-  }, [apiCaller, refresh, concatData, startDate, endDate]);
+  }, [apiCaller, refresh, concatData, startDate, endDate, isDateSelect]);
 
   const childrenRefreshAuto = () => {
     setRefresh(true);
   };
 
   const isClickJoinBtn = async () => {
-    if (selectedLectureId === "0") {
+    if (selectedLectureId === "0" || selectedLectureId === "") {
       setAlertNoteVisible(true);
       setTimeout(() => {
         setAlertNoteVisible(false);
       }, 3000);
     } else {
-      const response = await apiCaller.putPresent(Number(selectedLectureId));
-      if (response.code === 1000) {
-        childrenRefreshAuto();
-        setSelectedLectureId("");
+      if (concatData[selectedLectureId].person?.filter((user) => user.memberId === apiCaller.getMemberId())) {
+        setAlertIsJoinVisible(true);
+        setTimeout(() => {
+          setAlertIsJoinVisible(false);
+        }, 3000);
+        return;
+      }
+      if (concatData[selectedLectureId].person == null) {
+        const response = await apiCaller.putPresent(Number(selectedLectureId));
+        if (response.code === 1000) {
+          childrenRefreshAuto();
+          setSelectedLectureId(String(apiCaller.getLectureId()));
+          return;
+        }
       }
     }
   };
@@ -213,6 +239,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       {alertErrorVisible && <CustomAlert errorMsg="시작시간 또는 종료시간이 잘못되었습니다." />}
       {alertNoteVisible && <CustomAlert errorMsg="상단의 참여하실 시간 설정을 선택해주세요." />}
       {alertSuccessVisible && <CustomAlert successMsg="수정이 완료되었습니다." />}
+      {alertIsJoinVisible && <CustomAlert isJoinMsg="이미 참여하였습니다." />}
       <CloseBtn className="close" onClick={() => setVisible(false)}>
         <IconButton color="inherit">
           <CloseIcon sx={{ fontSize: 30, color: "white" }} />
@@ -259,10 +286,14 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
             adJoinBtnVisible={adJoinBtnVisible}
             isLectureDataOK={isLectureDataOK}
             filteredLecture={filteredLecture}
+            startDate={startDate}
+            endDate={endDate}
             setStartDate={setStartDate}
-            setEndtDate={setEndtDate}
+            setEndDate={setEndDate}
             childrenRefreshAuto={childrenRefreshAuto}
             setSelectedLectureId={setSelectedLectureId}
+            isDateSelect={isDateSelect}
+            setIsDateSelect={setIsDateSelect}
           />
         </TabPanel>
         <TabPanel value={2}>
@@ -270,6 +301,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
             apiCaller={apiCaller}
             adminData={adminData}
             childrenRefreshAuto={childrenRefreshAuto}
+            setSelectedLectureId={setSelectedLectureId}
             setAlertErrorVisible={setAlertErrorVisible}
             setAlertSuccessVisible={setAlertSuccessVisible}
           />

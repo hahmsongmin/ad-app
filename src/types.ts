@@ -75,6 +75,6 @@ export type ConcatType = {
     lectureName: string;
     startTime: string;
     endTime: string;
-    person: PersonProps[];
+    person?: PersonProps[];
   };
 };

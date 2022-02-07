@@ -36,12 +36,14 @@ function Admin({
   childrenRefreshAuto,
   setAlertErrorVisible,
   setAlertSuccessVisible,
+  setSelectedLectureId,
 }: {
   apiCaller: IMCLASS;
   adminData: LectureInquire["lectures"];
   childrenRefreshAuto: () => void;
   setAlertErrorVisible: React.Dispatch<boolean>;
   setAlertSuccessVisible: React.Dispatch<boolean>;
+  setSelectedLectureId: React.Dispatch<string>;
 }) {
   const [addVisible, setAddVisible] = useState(false);
   const [howManyData, setHowManyData] = useState<string>("");
@@ -183,6 +185,8 @@ function Admin({
         if (id === info.id) {
           newAdminData.splice(index, 1);
           apiCaller.deleteLecture(info.id);
+          setSelectedLectureId("0");
+          setIsDelModalVisible(false);
         }
       });
     });
@@ -190,7 +194,7 @@ function Admin({
       setAdminData(newAdminData);
     }, 0);
     deleteRef.current = [];
-  }, []);
+  }, [adminData, apiCaller, setSelectedLectureId]);
 
   const style = {
     position: "absolute" as "absolute",
@@ -219,8 +223,8 @@ function Admin({
               정말로 삭제하시겠습니까?
             </Typography>
             <Box sx={{ textAlign: "end" }}>
-              <Button>예</Button>
-              <Button>아니오</Button>
+              <Button onClick={deleteHandleClick}>예</Button>
+              <Button onClick={() => setIsDelModalVisible(false)}>아니오</Button>
             </Box>
           </Box>
         </Modal>

@@ -1,4 +1,4 @@
-import { Dispatch, useState } from "react";
+import { useState } from "react";
 import { DateRange, Range, RangeKeyDict } from "react-date-range";
 import styled from "styled-components";
 import IconButton from "@mui/material/IconButton";
@@ -9,13 +9,15 @@ import "react-date-range/dist/theme/default.css";
 const SearchCalendar = ({
   closeCalendarBtn,
   childrenRefreshAuto,
+  setIsDateSelect,
   setStartDate,
-  setEndtDate,
+  setEndDate,
 }: {
   closeCalendarBtn: () => void;
   childrenRefreshAuto: () => void;
-  setStartDate: Dispatch<string>;
-  setEndtDate: Dispatch<string>;
+  setIsDateSelect: React.Dispatch<boolean>;
+  setStartDate: React.Dispatch<string>;
+  setEndDate: React.Dispatch<string>;
 }) => {
   const [selectedState, setSelectedState] = useState<Range[]>([
     {
@@ -36,8 +38,11 @@ const SearchCalendar = ({
     const [endYear, endMonth, endtDay] = _endTemp;
     const startDate = `${startYear.trim()}.${startMonth.trim().padStart(2, "0")}.${startDay.trim().padStart(2, "0")}`;
     const endDate = `${endYear.trim()}.${endMonth.trim().padStart(2, "0")}.${endtDay.trim().padStart(2, "0")}`;
+    if (startDate && endDate) {
+      setIsDateSelect(true);
+    }
     setStartDate(startDate);
-    setEndtDate(endDate);
+    setEndDate(endDate);
     childrenRefreshAuto();
   };
 

@@ -2,7 +2,15 @@ import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 
-const CustomAlert = ({ successMsg, errorMsg }: { successMsg?: string; errorMsg?: string }) => {
+const CustomAlert = ({
+  successMsg,
+  errorMsg,
+  isJoinMsg,
+}: {
+  successMsg?: string;
+  errorMsg?: string;
+  isJoinMsg?: string;
+}) => {
   return (
     <StackContainer spacing={2}>
       {errorMsg && (
@@ -13,6 +21,11 @@ const CustomAlert = ({ successMsg, errorMsg }: { successMsg?: string; errorMsg?:
       {successMsg && (
         <AlertS severity="success" variant="filled" color="info">
           {successMsg}
+        </AlertS>
+      )}
+      {isJoinMsg && (
+        <AlertS severity="success" variant="filled" color="success">
+          {isJoinMsg}
         </AlertS>
       )}
     </StackContainer>

@@ -4,6 +4,9 @@ import { AdInquire, CommonCode, ConcatType, LectureInquire, PresentInquire, User
 
 interface IApiProvider {
   setSpaceAndMemberId(spaceId: number, memberId: number): void;
+  getMemberId(): number;
+  setSelectedLectureId(lectureId: number): void;
+  getLectureId(): number;
   //
   getAdInquire(): Promise<AdInquire["results"]>;
   //
@@ -29,6 +32,7 @@ class ApiCallers implements IApiProvider {
   private apiBase: AxiosInstance;
   private _spaceId: number = 0;
   private _memberId: number = 0;
+  private _lectureId: number = 0;
   private nickNameObject: UserProps = {};
   private constructor() {
     this.apiBase = axios.create({
@@ -51,6 +55,18 @@ class ApiCallers implements IApiProvider {
     this._memberId = memberId;
   }
 
+  getMemberId(): number {
+    return this._memberId;
+  }
+
+  setSelectedLectureId(lectureId: number) {
+    this._lectureId = lectureId;
+  }
+
+  getLectureId(): number {
+    return this._lectureId;
+  }
+
   getAdInquire = async (): Promise<AdInquire["results"]> => {
     try {
       const { data }: { data: AdInquire } = await this.apiBase.get(`/attend/${this._spaceId}`);
@@ -58,7 +74,7 @@ class ApiCallers implements IApiProvider {
         const keyName = user.memberId.toString();
         this.nickNameObject[keyName] = { memberId: user.memberId, memberName: user.memberName };
       });
-      return data.results;
+      return data?.results;
     } catch (e) {
       console.error(e);
       throw new Error("getAdInquire Faild");
@@ -90,7 +106,7 @@ class ApiCallers implements IApiProvider {
               lectureName: info.lectureName,
               startTime: info.startTime,
               endTime: info.endTime,
-              person: presents.map((item) => {
+              person: presents?.map((item) => {
                 return {
                   ...item,
                   memberName: this.getNickName(item.memberId),
@@ -178,8 +194,10 @@ class ApiCallers implements IApiProvider {
   };
 
   deleteLecture = async (lectureId: number) => {
+    console.log(lectureId);
     try {
-      await this.apiBase.delete(`/lecture/${lectureId}`);
+      const temp = await this.apiBase.delete(`/lecture/${lectureId}`);
+      console.log(temp);
     } catch (e) {
       console.error(e);
       throw new Error("deleteLecture Faild");
