@@ -133,7 +133,8 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     const getInitHandler = async () => {
       console.log("✅ 데이터 조회");
       try {
-        const adResults: AdInquire["results"] = await apiCaller.getAdInquire();
+        const adResults: AdInquire["results"] | undefined = await apiCaller.getAdInquire();
+        if (adResults == null) return;
         const lectureResults: LectureInquire["lectures"] | undefined = await apiCaller.getLectureInquire();
         transferLogDataInfo(adResults);
         if (lectureResults != null && lectureResults.length > 0) {

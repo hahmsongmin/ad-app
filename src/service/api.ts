@@ -8,7 +8,7 @@ interface IApiProvider {
   setSelectedLectureId(lectureId: number): void;
   getLectureId(): number;
   //
-  getAdInquire(): Promise<AdInquire["results"]>;
+  getAdInquire(): Promise<AdInquire["results"] | undefined>;
   //
   getPresentInquire(
     lectureResults: LectureInquire["lectures"],
@@ -67,14 +67,16 @@ class ApiCallers implements IApiProvider {
     return this._lectureId;
   }
 
-  getAdInquire = async (): Promise<AdInquire["results"]> => {
+  getAdInquire = async (): Promise<AdInquire["results"] | undefined> => {
     try {
       const { data }: { data: AdInquire } = await this.apiBase.get(`/attend/${this._spaceId}`);
-      data.results.forEach((user) => {
+      data?.results?.forEach((user) => {
         const keyName = user.memberId.toString();
         this.nickNameObject[keyName] = { memberId: user.memberId, memberName: user.memberName };
       });
-      return data?.results;
+      if (data?.results != null) {
+        return data?.results;
+      }
     } catch (e) {
       console.error(e);
       throw new Error("getAdInquire Faild");
