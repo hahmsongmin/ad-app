@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { DateRange, Range, RangeKeyDict } from "react-date-range";
-import styled from "styled-components";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
+import { useState } from 'react';
+import { DateRange, Range, RangeKeyDict } from 'react-date-range';
+import styled from 'styled-components';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 
 const SearchCalendar = ({
   closeCalendarBtn,
@@ -23,7 +23,7 @@ const SearchCalendar = ({
     {
       startDate: new Date(),
       endDate: new Date(),
-      key: "selection",
+      key: 'selection',
     },
   ]);
 
@@ -32,12 +32,12 @@ const SearchCalendar = ({
     const {
       selection: { startDate: _startDate, endDate: _endDate },
     } = rangesByKey;
-    const _startTemp = _startDate?.toLocaleDateString().replaceAll(" ", "").split(".")!;
-    const _endTemp = _endDate?.toLocaleDateString().replaceAll(" ", "").split(".")!;
+    const _startTemp = _startDate?.toLocaleDateString().replaceAll(' ', '').split('.')!;
+    const _endTemp = _endDate?.toLocaleDateString().replaceAll(' ', '').split('.')!;
     const [startYear, startMonth, startDay] = _startTemp;
     const [endYear, endMonth, endtDay] = _endTemp;
-    const startDate = `${startYear.trim()}.${startMonth.trim().padStart(2, "0")}.${startDay.trim().padStart(2, "0")}`;
-    const endDate = `${endYear.trim()}.${endMonth.trim().padStart(2, "0")}.${endtDay.trim().padStart(2, "0")}`;
+    const startDate = `${startYear.trim()}.${startMonth.trim().padStart(2, '0')}.${startDay.trim().padStart(2, '0')}`;
+    const endDate = `${endYear.trim()}.${endMonth.trim().padStart(2, '0')}.${endtDay.trim().padStart(2, '0')}`;
     if (startDate && endDate) {
       setIsDateSelect(true);
     }
@@ -54,12 +54,12 @@ const SearchCalendar = ({
           onChange={handleChange}
           moveRangeOnFirstSelection={false}
           ranges={selectedState}
-          rangeColors={["#00a29a", "red"]}
+          rangeColors={['#00a29a', 'red']}
           direction="horizontal"
         />
         <CloseBtn onClick={closeCalendarBtn}>
           <IconButton color="inherit">
-            <CloseIcon sx={{ fontSize: 30, color: "#00a29a" }} />
+            <CloseIcon sx={{ fontSize: 30, color: '#00a29a' }} />
           </IconButton>
         </CloseBtn>
       </DateContainer>
