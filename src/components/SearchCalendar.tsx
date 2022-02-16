@@ -5,6 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import 'react-date-range/dist/styles';
 
 const SearchCalendar = ({
   closeCalendarBtn,
@@ -73,7 +74,7 @@ const MainContainer = styled.div`
   position: absolute;
   z-index: 19;
   width: 470px;
-  height: 530px;
+  height: 570px;
   background-color: whitesmoke;
   border-radius: 15px;
   transform: translate(68%, -11%);
