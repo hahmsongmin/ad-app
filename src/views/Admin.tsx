@@ -1,24 +1,24 @@
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import { DataGrid, GridRenderCellParams, GridEditCellPropsParams, GridCellParams, MuiEvent } from "@mui/x-data-grid";
-import { styled } from "@mui/material/styles";
-import { DataListBox, FormControlStyle, GRID_DEFAULT_LOCALE_TEXT, InputLabelStyle, SelectStyle } from "../config";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import CustomPagination from "../components/CustomPagination";
-import QuickSearchToolbar from "../components/QuickSearchToolbar";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import Modal from "@mui/material/Modal";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from "@mui/material";
-import IMCLASS from "../service/api";
-import { LectureInquire } from "../types";
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
+import { DataGrid, GridRenderCellParams, GridEditCellPropsParams, GridCellParams, MuiEvent } from '@mui/x-data-grid';
+import { styled } from '@mui/material/styles';
+import { DataListBox, FormControlStyle, GRID_DEFAULT_LOCALE_TEXT, InputLabelStyle, SelectStyle } from '../config';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import CustomPagination from '../components/CustomPagination';
+import QuickSearchToolbar from '../components/QuickSearchToolbar';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import IMCLASS from '../service/api';
+import { LectureInquire } from '../types';
 
 type AdminProps = {
   id: number;
@@ -31,6 +31,7 @@ type AdminProps = {
 const regTimeRef = /^[0-9]{2}[:]{1}[0-9]{2}$/;
 
 function Admin({
+  alertVisible,
   apiCaller,
   adminData: _adminData,
   childrenRefreshAuto,
@@ -38,15 +39,16 @@ function Admin({
   setAlertSuccessVisible,
   setSelectedLectureId,
 }: {
+  alertVisible: (alertAction: React.Dispatch<React.SetStateAction<boolean>>) => void;
   apiCaller: IMCLASS;
-  adminData: LectureInquire["lectures"];
+  adminData: LectureInquire['lectures'];
   childrenRefreshAuto: () => void;
-  setAlertErrorVisible: React.Dispatch<boolean>;
-  setAlertSuccessVisible: React.Dispatch<boolean>;
-  setSelectedLectureId: React.Dispatch<string>;
+  setAlertErrorVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  setAlertSuccessVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedLectureId: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [addVisible, setAddVisible] = useState(false);
-  const [howManyData, setHowManyData] = useState<string>("");
+  const [howManyData, setHowManyData] = useState<string>('');
   const [adminData, setAdminData] = useState<AdminProps[]>([]);
   const [isDelModalVisible, setIsDelModalVisible] = useState<boolean>(false);
   const classNameRef: React.RefObject<HTMLInputElement> = useRef(null);
@@ -87,20 +89,14 @@ function Admin({
         if (regTimeRef.test(시작시간) && regTimeRef.test(종료시간)) {
           const data = await apiCaller.postLecture(id, 시간설정, 시작시간, 종료시간);
           if (data.code === 1000) {
-            setAlertSuccessVisible(true);
-            setTimeout(() => {
-              setAlertSuccessVisible(false);
-            }, 3000);
+            alertVisible(setAlertSuccessVisible);
           }
         } else {
-          setAlertErrorVisible(true);
-          setTimeout(() => {
-            setAlertErrorVisible(false);
-          }, 3000);
+          alertVisible(setAlertErrorVisible);
         }
       }
     },
-    [apiCaller, setAlertErrorVisible, setAlertSuccessVisible]
+    [apiCaller, setAlertErrorVisible, setAlertSuccessVisible, alertVisible]
   );
 
   const clickSaveBtn = async () => {
@@ -113,11 +109,11 @@ function Admin({
         if (data.code === 1000) childrenRefreshAuto();
         setAddVisible(false);
       } else {
-        if (lectureName === "") {
+        if (lectureName === '') {
           classNameRef.current?.focus();
-        } else if (startTime === "" || !regTimeRef.test(startTime)) {
+        } else if (startTime === '' || !regTimeRef.test(startTime)) {
           startTimeRef.current?.focus();
-        } else if (endTime === "" || !regTimeRef.test(endTime)) {
+        } else if (endTime === '' || !regTimeRef.test(endTime)) {
           endTimeRef.current?.focus();
         }
       }
@@ -185,7 +181,7 @@ function Admin({
         if (id === info.id) {
           newAdminData.splice(index, 1);
           apiCaller.deleteLecture(info.id);
-          setSelectedLectureId("0");
+          setSelectedLectureId('0');
           setIsDelModalVisible(false);
         }
       });
@@ -197,14 +193,14 @@ function Admin({
   }, [adminData, apiCaller, setSelectedLectureId]);
 
   const style = {
-    position: "absolute" as "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
     width: 400,
-    bgcolor: "background.paper",
+    bgcolor: 'background.paper',
     borderRadius: 5,
-    border: "2px solid #00a29a",
+    border: '2px solid #00a29a',
     boxShadow: 24,
     p: 4,
   };
@@ -223,7 +219,7 @@ function Admin({
             <Typography id="modal-modal-title" variant="h6" component="h2">
               정말로 삭제하시겠습니까?
             </Typography>
-            <Box sx={{ textAlign: "end" }}>
+            <Box sx={{ textAlign: 'end' }}>
               <Button onClick={deleteHandleClick}>예</Button>
               <Button onClick={() => setIsDelModalVisible(false)}>아니오</Button>
             </Box>
@@ -253,8 +249,8 @@ function Admin({
   };
 
   const AddDeleteBtn = styled(Box)({
-    position: "absolute",
-    color: "white",
+    position: 'absolute',
+    color: 'white',
     top: 165,
     right: 75,
   });
@@ -287,9 +283,9 @@ function Admin({
         <DataGrid
           rows={adminData}
           onCellKeyDown={(params: GridCellParams, event: MuiEvent<React.KeyboardEvent>) => {
-            if (event.key === "Enter") {
+            if (event.key === 'Enter') {
               setTimeout(() => {
-                document.querySelector("h1")?.click();
+                document.querySelector('h1')?.click();
               }, 500);
               event.stopPropagation(); // Bubbling
             }
@@ -305,18 +301,18 @@ function Admin({
           }}
           pagination
           columns={[
-            { field: "NO", type: "number", width: 100 },
+            { field: 'NO', type: 'number', width: 100 },
             {
-              field: "시간설정",
-              type: "string",
+              field: '시간설정',
+              type: 'string',
               width: 200,
               editable: true,
             },
-            { field: "시작시간", type: "string", width: 140, editable: true },
-            { field: "종료시간", type: "string", width: 140, editable: true },
+            { field: '시작시간', type: 'string', width: 140, editable: true },
+            { field: '종료시간', type: 'string', width: 140, editable: true },
             {
-              field: "actions",
-              type: "actions",
+              field: 'actions',
+              type: 'actions',
               width: 155,
               renderCell: (params: GridRenderCellParams) => {
                 const onClickModification = () => {

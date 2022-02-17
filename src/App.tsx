@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { emitter } from './index';
 import styled from 'styled-components';
 import LogDataList from './views/LogDataList';
-import './views/dataList.css';
 import IconButton from '@mui/material/IconButton';
+import './views/dataList.css';
 import DoneOutlineIcon from '@mui/icons-material/DoneOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
@@ -20,6 +20,25 @@ import { GRID_DEFAULT_LOCALE_TEXT } from './config';
 import CustomAlert from './components/CustomAlert';
 import IMCLASS from './service/api';
 
+type DayCallBack = () => string;
+
+interface IEssentialProps {
+  setToday(callback: DayCallBack): void;
+  readonly getToday: DayCallBack;
+}
+
+class ComponentFunction implements IEssentialProps {
+  private todayFunc!: DayCallBack;
+  set setToday(callback: DayCallBack) {
+    this.todayFunc = callback;
+  }
+  get getToday(): DayCallBack {
+    return this.todayFunc;
+  }
+}
+
+const recycleFuncZone = new ComponentFunction();
+
 function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const [logDataInfo, setLogDataInfo] = useState<LogInfo[]>([]);
   const [concatData, setConcatData] = useState<ConcatType>({});
@@ -35,12 +54,13 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const [alertNoteVisible, setAlertNoteVisible] = useState<boolean>(false);
   const [alertSuccessVisible, setAlertSuccessVisible] = useState<boolean>(false);
   const [alertIsJoinVisible, setAlertIsJoinVisible] = useState<boolean>(false);
+  const [alertJoinVisible, setAlertJoinVisible] = useState<boolean>(false);
   const [isDateSelect, setIsDateSelect] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState<Boolean>(false);
   const [userType, setUerType] = useState<string>('');
-
+  const [isDataLoad, setIsDataLoad] = useState<boolean>(false);
   const spaceIdRef = useRef<number>(0);
 
   useEffect(() => {
@@ -56,11 +76,15 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     };
 
     const transferDate = (_enterDt: string): string => {
-      console.log(commonDt(_enterDt).slice(2, 13));
-      const dateTemp = commonDt(_enterDt).slice(2, 13).replaceAll(' ', '');
-      const date = [dateTemp.split('.')[0], dateTemp.split('.')[1].padStart(2, '0'), dateTemp.split('.')[2].padStart(2, '0')]
-        .join()
-        .replaceAll(',', '.');
+      const dateTemp = commonDt(_enterDt, true).slice(2, 13).replaceAll(' ', '');
+      let date: string;
+      try {
+        date = [dateTemp.split('.')[0], dateTemp.split('.')[1]!.padStart(2, '0'), dateTemp.split('.')[2]!.padStart(2, '0')]
+          .join()
+          .replaceAll(',', '.');
+      } catch {
+        throw new Error('transferDate');
+      }
       return date;
     };
 
@@ -116,10 +140,8 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
 
     const getTodate = (): string => {
       const date: string[] = new Date().toLocaleString().split('.')!;
-      const year = date[0];
-      const month = date[1];
-      const day = date[2];
-      return `${year.trim()}.${month.trim().padStart(2, '0')}.${day.trim().padStart(2, '0')}`;
+      const [year, month, day] = date;
+      return `${year?.trim()}.${month?.trim().padStart(2, '0')}.${day?.trim().padStart(2, '0')}`;
     };
 
     const handleFilterLecture = (lectureResults: LectureInquire['lectures']) => {
@@ -161,8 +183,9 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
           setLectureId(['0', ...newLectureId]);
           handleFilterLecture(lectureResults);
           if (adResults.length > 0) {
-            const concatResults: ConcatType | void = await apiCaller.getPresentInquire(lectureResults, _startDate, _endDate);
+            const concatResults: ConcatType | undefined = await apiCaller.getPresentInquire(lectureResults, _startDate, _endDate);
             if (concatResults != null) {
+              setIsDataLoad(true);
               setConcatData(concatResults);
             }
           }
@@ -185,6 +208,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
 
     // 이벤트 (클라-출석부) =>
     const eventHandler = ({ isAdmin, spaceId, memberId }: { isAdmin: boolean; spaceId: number; memberId: number }) => {
+      recycleFuncZone.setToday = getTodate;
       spaceIdRef.current = spaceId;
       setIsAdmin(isAdmin); // 관리자 입니까 ?
       setUerType(isAdmin ? 'Admin' : 'User'); // 관리자 입니까 ?
@@ -202,26 +226,44 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     setRefresh(true);
   };
 
-  const isClickJoinBtn = async () => {
+  const alertVisible = useCallback((alertAction: React.Dispatch<React.SetStateAction<boolean>>) => {
+    alertAction(true);
+    setTimeout(() => {
+      alertAction(false);
+    }, 3000);
+  }, []);
+
+  const addPresent = async () => {
+    const response = await apiCaller.putPresent(Number(selectedLectureId));
+    if (response.code === 1000) {
+      childrenRefreshAuto();
+      setSelectedLectureId(String(apiCaller.getLectureId()));
+      alertVisible(setAlertJoinVisible);
+    }
+  };
+
+  const isClickJoinBtn = () => {
+    if (isDataLoad === false) return;
     if (selectedLectureId === '0' || selectedLectureId === '') {
-      setAlertNoteVisible(true);
-      setTimeout(() => {
-        setAlertNoteVisible(false);
-      }, 3000);
+      alertVisible(setAlertNoteVisible);
     } else {
-      if (concatData[selectedLectureId].person?.filter((user) => user.memberId === apiCaller.getMemberId())) {
-        setAlertIsJoinVisible(true);
-        setTimeout(() => {
-          setAlertIsJoinVisible(false);
-        }, 3000);
-        return;
-      }
-      if (concatData[selectedLectureId].person == null) {
-        const response = await apiCaller.putPresent(Number(selectedLectureId));
-        if (response.code === 1000) {
-          childrenRefreshAuto();
-          setSelectedLectureId(String(apiCaller.getLectureId()));
+      if (Object.keys(concatData).length > 0 && selectedLectureId != null) {
+        const today: string = recycleFuncZone.getToday().replaceAll('.', '-');
+        if (concatData[selectedLectureId]!.person == null) {
+          addPresent();
           return;
+        } else {
+          const users = concatData[selectedLectureId]!.person?.filter((user) => user.memberId === apiCaller.getMemberId());
+          if (users != null) {
+            const isDuplicated = users.some((user) => new Date(user.presentDate).getTime() === new Date(today).getTime());
+            if (isDuplicated) {
+              alertVisible(setAlertIsJoinVisible);
+            } else {
+              addPresent();
+            }
+          } else {
+            addPresent();
+          }
         }
       }
     }
@@ -243,6 +285,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       {alertErrorVisible && <CustomAlert errorMsg="시작시간 또는 종료시간이 잘못되었습니다." />}
       {alertNoteVisible && <CustomAlert errorMsg="상단의 참여하실 시간 설정을 선택해주세요." />}
       {alertSuccessVisible && <CustomAlert successMsg="수정이 완료되었습니다." />}
+      {alertJoinVisible && <CustomAlert successMsg="참여가 완료되었습니다." />}
       {alertIsJoinVisible && <CustomAlert isJoinMsg="이미 참여하였습니다." />}
       <CloseBtn className="close" onClick={() => setVisible(false)}>
         <IconButton color="inherit">
@@ -302,6 +345,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
         </TabPanel>
         <TabPanel value={2}>
           <Admin
+            alertVisible={alertVisible}
             apiCaller={apiCaller}
             adminData={adminData}
             childrenRefreshAuto={childrenRefreshAuto}
@@ -357,6 +401,7 @@ const AppContainer = styled.div<{ visible: boolean }>`
   box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.35);
   -webkit-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.35);
   -moz-box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.35);
+  z-index: 1000;
 `;
 
 const ReFresh = styled.div`
