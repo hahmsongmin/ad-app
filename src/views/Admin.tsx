@@ -63,8 +63,8 @@ function Admin({
         id: info.lectureId,
         NO: index + 1,
         시간설정: info.lectureName,
-        시작시간: info.startTime,
-        종료시간: info.endTime,
+        시작시간: info.startTime.substring(0, 5),
+        종료시간: info.endTime.substring(0, 5),
       };
     });
     setAdminData(data);
