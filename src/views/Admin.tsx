@@ -28,7 +28,7 @@ type AdminProps = {
   종료시간: string;
 };
 
-const regTimeRef = /^[0-9]{2}[:]{1}[0-9]{2}$/;
+const regTimeRef = /^[0-2]{1}[0-9]{1}[:]{1}[0-5]{1}[0-9]{1}$/;
 
 function Admin({
   alertVisible,
@@ -82,11 +82,24 @@ function Admin({
     setHowManyData(event.target.value);
   };
 
+  const inputTimeCheck = (startTime: string, endTime: string): [boolean, boolean] => {
+    if (Number(startTime.substring(0, 2)) >= 24 && Number(endTime.substring(0, 2)) >= 24) {
+      return [false, false];
+    } else if (Number(endTime.substring(0, 2)) >= 24) {
+      return [true, false];
+    } else if (Number(startTime.substring(0, 2)) >= 24) {
+      return [false, true];
+    } else {
+      return [true, true];
+    }
+  };
+
   const clickEditRowsBtn = useCallback(
     async (params: GridRenderCellParams) => {
-      const { id, 시간설정, 시작시간, 종료시간 } = params.row;
+      const { id, 시간설정, 시작시간, 종료시간 }: { id: number; 시간설정: string; 시작시간: string; 종료시간: string } = params.row;
+      const [startOk, endOk] = inputTimeCheck(시작시간, 종료시간);
       if (시간설정 != null && 시작시간 != null && 종료시간 != null) {
-        if (regTimeRef.test(시작시간) && regTimeRef.test(종료시간)) {
+        if (regTimeRef.test(시작시간) && regTimeRef.test(종료시간) && startOk && endOk) {
           const data = await apiCaller.postLecture(id, 시간설정, 시작시간, 종료시간);
           if (data.code === 1000) {
             alertVisible(setAlertSuccessVisible);
@@ -104,17 +117,20 @@ function Admin({
     const startTime = startTimeRef.current?.value;
     const endTime = endTimeRef.current?.value;
     if (lectureName != null && startTime != null && endTime != null) {
-      if (regTimeRef.test(startTime) && regTimeRef.test(endTime)) {
+      const [startOk, endOk] = inputTimeCheck(startTime, endTime);
+      if (regTimeRef.test(startTime) && regTimeRef.test(endTime) && startOk && endOk) {
         const data = await apiCaller.putLecture(lectureName, startTime, endTime);
         if (data.code === 1000) childrenRefreshAuto();
         setAddVisible(false);
       } else {
         if (lectureName === '') {
           classNameRef.current?.focus();
-        } else if (startTime === '' || !regTimeRef.test(startTime)) {
+        } else if (startTime === '' || !regTimeRef.test(startTime) || startOk === false) {
           startTimeRef.current?.focus();
-        } else if (endTime === '' || !regTimeRef.test(endTime)) {
+        } else if (endTime === '' || !regTimeRef.test(endTime) || endOk === false) {
           endTimeRef.current?.focus();
+        } else {
+          throw new Error(`${startTime}${endTime}`);
         }
       }
     }
@@ -144,7 +160,7 @@ function Admin({
           />
           <TextField
             inputRef={startTimeRef}
-            placeholder="시작시간을 입력해주세요. 예시(09:00)"
+            placeholder="시작시간을 입력해주세요. 예시(09:00) 24:00 => 00:00"
             margin="dense"
             id="name"
             label="시작시간"
@@ -155,7 +171,7 @@ function Admin({
           />
           <TextField
             inputRef={endTimeRef}
-            placeholder="종료시간을 입력해주세요. 예시(10:00)"
+            placeholder="종료시간을 입력해주세요."
             margin="dense"
             id="name"
             label="종료시간"
