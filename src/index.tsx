@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import GlobalStyle from './styles';
 import ApiCallers from './service/api';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { enUS } from '@mui/material/locale';
 import EventEmitter from 'events';
 
 class EventHandle extends EventEmitter {}
@@ -14,6 +16,8 @@ const isAdmin: boolean = true; // true 관리자, false 일반유저
 const spaceId: number = 479;
 const memberId: number = 6583;
 
+const theme = createTheme(enUS);
+
 ReactDOM.render(
   <React.StrictMode>
     <button
@@ -24,7 +28,9 @@ ReactDOM.render(
       출석부클릭
     </button>
     <GlobalStyle />
-    <App apiCaller={apiCaller} />
+    <ThemeProvider theme={theme}>
+      <App apiCaller={apiCaller} />
+    </ThemeProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
