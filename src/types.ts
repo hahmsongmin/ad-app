@@ -30,8 +30,26 @@ export type AdInquireObj = {
   leaveDt: string | null;
 };
 
+export type SpaceUserInfo = {
+  character: string;
+  gender: string;
+  id: number;
+  name: string;
+  state: string; // "online" | "offline"
+  substituteImg: null;
+  substituteUse: string;
+  userId: number | null; // member | guest
+  xpos: null;
+  ypos: null;
+}[];
+
 export type AdInquire = CommonCode & {
   results: AdInquireObj[];
+  page: {
+    size: number;
+    totalElements: number;
+    totalPages: number;
+  };
 };
 
 export type LectureInquire = CommonCode & {

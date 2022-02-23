@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import qs from 'qs';
-import { AdInquire, CommonCode, ConcatType, LectureInquire, PresentInquire, UserProps } from '../types';
+import { AdInquire, CommonCode, ConcatType, LectureInquire, PresentInquire, SpaceUserInfo, UserProps } from '../types';
 
 interface IApiProvider {
   setSpaceAndMemberId(spaceId: number, memberId: number): void;
@@ -8,7 +8,10 @@ interface IApiProvider {
   setSelectedLectureId(lectureId: number): void;
   getLectureId(): number;
   //
+  getAdPageSize(): Promise<boolean | undefined>;
   getAdInquire(): Promise<AdInquire['results'] | undefined>;
+  //
+  setNickNameWithMemberId(): void;
   //
   getPresentInquire(lectureResults: LectureInquire['lectures'], startDate: string, endDate: string): Promise<ConcatType | undefined>;
   postPresent(presentId: number, present: string): void;
@@ -29,10 +32,11 @@ class ApiCallers implements IApiProvider {
   private _spaceId: number = 0;
   private _memberId: number = 0;
   private _lectureId: number = 0;
+  private _tatolElement: number = 0;
   private nickNameObject: UserProps = {};
   private constructor() {
     this.apiBase = axios.create({
-      baseURL: 'https://admin.meetpage.co.kr',
+      baseURL: 'https://api.meetpage.io',
       withCredentials: true,
     });
   }
@@ -63,20 +67,48 @@ class ApiCallers implements IApiProvider {
     return this._lectureId;
   }
 
-  getAdInquire = async (): Promise<AdInquire['results'] | undefined> => {
+  getAdPageSize = async (): Promise<boolean | undefined> => {
     try {
-      const { data }: { data: AdInquire } = await this.apiBase.get(`/attend/${this._spaceId}`);
-      data?.results?.forEach((user) => {
-        const keyName = user.memberId.toString();
-        this.nickNameObject[keyName] = { memberId: user.memberId, memberName: user.memberName };
-      });
-      if (data?.results != null) {
-        return data?.results;
+      const {
+        data: { page },
+      }: { data: { page: AdInquire['page'] } } = await this.apiBase.get(`/attend/${this._spaceId}`);
+      if (page) {
+        this._tatolElement = page.totalElements;
+        return true;
       }
       return undefined;
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  getAdInquire = async (): Promise<AdInquire['results'] | undefined> => {
+    try {
+      const { data }: { data: AdInquire } = await this.apiBase.get(`/attend/${this._spaceId}`, {
+        params: {
+          size: this._tatolElement,
+        },
+      });
+      if (data?.results != null) {
+        return data?.results;
+      }
+    } catch (e) {
+      console.error(e);
       throw new Error('getAdInquire Faild');
+    }
+  };
+
+  setNickNameWithMemberId = async () => {
+    try {
+      const {
+        data: { members },
+      }: { data: { members: SpaceUserInfo } } = await this.apiBase(`/v2/space/${this._spaceId}`);
+      members?.forEach((user) => {
+        const keyName = user.id.toString();
+        this.nickNameObject[keyName] = { memberId: user.id, memberName: user.name };
+      });
+    } catch (e) {
+      console.error(e);
     }
   };
 
