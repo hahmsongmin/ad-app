@@ -64,24 +64,14 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
   const spaceIdRef = useRef<number>(0);
 
   useEffect(() => {
-    const commonDt = (Dt: string, date = false): string => {
-      const tempDt = Dt.split(' ').filter((item) => item !== '');
-      let firstTime: number = 0;
-      firstTime = new Date(tempDt.join(' ')).getTime() + 540 * 60 * 1000;
-      if (date) {
-        return new Date(firstTime).toLocaleString();
-      } else {
-        return new Date(firstTime).toString();
-      }
-    };
-
     const transferDate = (_enterDt: string): string => {
-      const dateTemp = commonDt(_enterDt, true).slice(2, 13).replaceAll(' ', '');
+      const [year, month, day] = new Date(_enterDt)
+        .toLocaleDateString()
+        .split('.')
+        .filter((item) => item !== '');
       let date: string;
       try {
-        date = [dateTemp.split('.')[0], dateTemp.split('.')[1]!.padStart(2, '0'), dateTemp.split('.')[2]!.padStart(2, '0')]
-          .join()
-          .replaceAll(',', '.');
+        date = [year.substring(2), month.trim().padStart(2, '0'), day.trim().padStart(2, '0')].join().replaceAll(',', '.');
       } catch {
         throw new Error('transferDate');
       }
@@ -89,7 +79,7 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     };
 
     const commonTime = (Dt: string): string => {
-      const [hours, minutes] = commonDt(Dt).split(' ')[4].split(':');
+      const [hours, minutes] = new Date(Dt).toTimeString().split(' ')[0].split(':');
       Dt = [hours.padStart(2, '0'), minutes.padStart(2, '0')].join(':');
       return Dt;
     };
@@ -139,9 +129,38 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
     };
 
     const getTodate = (): string => {
-      const date: string[] = new Date().toLocaleString().split('.')!;
-      const [year, month, day] = date;
-      return `${year?.trim()}.${month?.trim().padStart(2, '0')}.${day?.trim().padStart(2, '0')}`;
+      const [_year, _month, _day] = new Date()
+        .toLocaleDateString()
+        .split('.')
+        .filter((item) => item !== '');
+
+      const year = _year.trim();
+      const month = _month.trim().padStart(2, '0');
+      const day = _day.trim().padStart(2, '0');
+      const date = `${year}-${month}-${day}`;
+      return date;
+    };
+
+    const transferISO = (_date: string, endRangeDate?: string): [string, string] => {
+      let start = '';
+      let end = '';
+      if (endRangeDate) {
+        start = _date;
+        end = endRangeDate; // calender select range endDate
+      } else {
+        start = _date;
+        end = _date;
+      }
+      const startDate = `${start}T00:00:00Z`;
+      const endDate = `${end}T24:00:00Z`;
+      return [startDate, endDate];
+    };
+
+    const getTodateISO = (): [string, string] => {
+      //
+      const date = getTodate();
+      const [startDate, endDate] = transferISO(date);
+      return [startDate, endDate];
     };
 
     const handleFilterLecture = (lectureResults: LectureInquire['lectures']) => {
