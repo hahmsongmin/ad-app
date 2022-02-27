@@ -101,23 +101,44 @@ function App({ apiCaller }: { apiCaller: IMCLASS }) {
       return [enterDt, leaveDt];
     };
 
+    // const transferLogDataInfo = (_result: AdInquire['results']) => {
+    //   const infoArray: LogInfo[] = [];
+    //   const newData = [..._result];
+    //   const removeDuplicatedMemberId = newData.reverse().reduce((acc: AdInquireObj[], curr: AdInquireObj) => {
+    //     if (acc.findIndex(({ memberId }) => memberId === curr.memberId) === -1) {
+    //       acc.push(curr);
+    //     }
+    //     return acc;
+    //   }, []);
+    //   removeDuplicatedMemberId.reverse().forEach((info) => {
+    //     const logData: LogInfo = {
+    //       memberId: info.memberId,
+    //       memberName: info.memberName,
+    //       date: transferDate(info.enterDt),
+    //       enterDt: transferTime(info.enterDt)[0],
+    //       leaveDt: info.leaveDt == null ? '' : transferTime(info.enterDt, info.leaveDt)[1],
+    //       memberType: info.isMember ?? '',
+    //     };
+    //     infoArray.push(logData);
+    //   });
+    //   if (infoArray.length > 0) {
+    //     setLogDataInfo(() => {
+    //       return infoArray.map((info) => info);
+    //     });
+    //   }
+    // };
+
+    // 중복포함 전부 보여주기
     const transferLogDataInfo = (_result: AdInquire['results']) => {
       const infoArray: LogInfo[] = [];
-      const newData = [..._result];
-      const removeDuplicatedMemberId = newData.reverse().reduce((acc: AdInquireObj[], curr: AdInquireObj) => {
-        if (acc.findIndex(({ memberId }) => memberId === curr.memberId) === -1) {
-          acc.push(curr);
-        }
-        return acc;
-      }, []);
-      removeDuplicatedMemberId.reverse().forEach((info) => {
+      _result.forEach((info) => {
         const logData: LogInfo = {
           memberId: info.memberId,
           memberName: info.memberName,
           date: transferDate(info.enterDt),
           enterDt: transferTime(info.enterDt)[0],
           leaveDt: info.leaveDt == null ? '' : transferTime(info.enterDt, info.leaveDt)[1],
-          memberType: info.isMember ?? '',
+          memberType: info.isMember ? true : false,
         };
         infoArray.push(logData);
       });
